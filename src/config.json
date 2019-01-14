@@ -1,0 +1,8 @@
+{
+    "emails": {
+        "passwordResetSubject": "Password Reset",
+        "confirmAccountSubject": "Account confirmation"
+    },
+    "appName": "Coinstash",
+    "host": "http://localhost:8080"
+}
