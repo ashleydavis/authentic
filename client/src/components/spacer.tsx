@@ -36,9 +36,6 @@ export interface ISpacerProps {
 export class Spacer extends React.Component<ISpacerProps, {}> {
 
     render() {
-        var parent = (this as any)._reactInternalInstance._currentElement; //._owner._instance;
-        console.log(parent); //fio:
-
         let size =  this.props.size !== undefined
             ? this.props.size
             : defaultSize;

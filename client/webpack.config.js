@@ -3,6 +3,9 @@ const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const outputDir = path.join(path.dirname(__dirname), "build", "client");
+console.log("Webpack output directory " + outputDir);
+const staticAssets = path.join(__dirname, "public");
+console.log("Serving public assets from " + staticAssets);
 
 module.exports = {
     entry: "./src/index.tsx",
@@ -17,7 +20,10 @@ module.exports = {
     devtool: "source-map",
 
     devServer: {
-        contentBase: outputDir,
+        contentBase: [
+            outputDir,
+            staticAssets,
+        ],
         hotOnly: true,
 
         // https://medium.com/@drgenejones/proxying-an-external-api-with-webpack-serve-code-and-a-restful-data-from-separate-endpoints-4da9b8daf430

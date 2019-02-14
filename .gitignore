@@ -1,0 +1,5 @@
+client/node_modules/
+.vagrant/
+node_modules/
+tmp/
+ubuntu-xenial-16.04-cloudimg-console.log

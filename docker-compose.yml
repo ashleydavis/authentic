@@ -1,0 +1,63 @@
+#
+# Help
+#
+# Docs:
+# https://docs.docker.com/compose/compose-file
+#
+# The z/Z flags for volumes:
+# https://stackoverflow.com/a/35222815/25868
+#
+
+version: '3'
+services:
+
+  db:
+    image: mongo
+    container_name: db
+    ports:
+     - "27017:27017"
+    expose:
+      - "27017"
+    restart: "no"
+
+  web-dev:
+    image: web-dev
+    build: 
+      context: ./client
+      dockerfile: Dockerfile-dev
+    container_name: web-dev
+    volumes:
+     - ./tmp/npm-cache:/root/.npm:z
+     - ./client/src:/usr/src/app/src:z
+     - ./public:/usr/src/app/public:z
+    ports:
+     - "5000:5000"
+    depends_on:
+      - web
+    restart: always
+
+  web:
+    image: web
+    build: 
+      context: ./
+      dockerfile: Dockerfile-dev
+    container_name: web
+    volumes:
+      - ./tmp/npm-cache:/root/.npm:z
+      - ./src:/usr/src/app/src:z
+      - ./public:/usr/src/app/public:z
+      - ./templates:/usr/src/app/templates:z
+    ports:
+     - "5001:80"
+    environment:
+      - PORT=80
+      - MESSAGING_HOST=amqp://guest:guest@rabbit:5672
+      - DBHOST=mongodb://db:27017
+      - DBNAME=test
+      - SESSIONDB=mongodb://db:27017/test
+      - NODE_ENV=development
+      - MAILGUN_API_KEY=1234
+      - DOMAIN_NAME=authtemplate.com
+      - FROM_EMAIL=me@authtemplate.com
+    restart: always
+

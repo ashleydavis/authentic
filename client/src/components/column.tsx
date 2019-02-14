@@ -15,16 +15,29 @@ export enum ColumnAlign {
     Stretch = "stretch",
 }
 
+/**
+ * Specifies the justification of children.
+ */
+export enum ColumnJustify {
+    Start = "flex-start",
+    End = "flex-end",
+    Center = "center",
+}
 export interface IColumnProps {
+    //
+    // Class for the row.
+    //
+    className?: string;
+
     //
     // Specifies the alignment of children.
     //
     alignItems?: ColumnAlign;
 
     //
-    // Class name for the child.
+    // Specifies the content justification for the column.
     //
-    className?: string;
+    justifyContent?: ColumnJustify;
 }
 
 export class Column extends React.Component<IColumnProps, {}> {
@@ -37,6 +50,7 @@ export class Column extends React.Component<IColumnProps, {}> {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: this.props.alignItems || ColumnAlign.Center,
+                    justifyContent: this.props.justifyContent || ColumnJustify.Center,
                 }}
                 >
                 {this.props.children}

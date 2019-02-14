@@ -12,7 +12,6 @@ export interface ISignInProps {
 }
 
 export interface ISignInState {
-    signedin: boolean;
     validated: boolean;
     errorMessage?: string;
     working: boolean;
@@ -28,31 +27,28 @@ export class SignInUI extends React.Component<ISignInProps, ISignInState> {
         super(props);
 
         this.state = {
-            signedin: false,
             validated: false,
             working: false,
             emailAddress: "",
             password: "",
         };
 
-        this.componentDidMount = asyncHandler(this, this.componentDidMount);
+        this.onSignedIn = this.onSignedIn.bind(this);
         this.onEmailInputChange = asyncHandler(this, this.onEmailInputChange);
         this.onPasswordInputChange = asyncHandler(this, this.onPasswordInputChange);
         this.onSignInClick = asyncHandler(this, this.onSignInClick);
     }
     
-    async componentDidMount(): Promise<void> {
-        await this.checkSignedIn();
+    componentDidMount() {
+        this.authentication.onSignedIn.attach(this.onSignedIn);
     }
 
-    private async checkSignedIn(): Promise<void> {
-        console.log("Checking for signin!");
-        const isSignedin = await this.authentication.isSignedIn();
-        console.log("Signed in: " + isSignedin);
+    componentWillUnmount() {
+        this.authentication.onSignedIn.detach(this.onSignedIn);
+    }
 
-        if (isSignedin != this.state.signedin) {
-            await updateState(this, { signedin: isSignedin });
-        }
+    onSignedIn() {
+        this.forceUpdate();
     }
 
     private isValid(): boolean {
@@ -81,10 +77,7 @@ export class SignInUI extends React.Component<ISignInProps, ISignInState> {
         try {
             await updateState(this, { working: true });
             const result = await this.authentication.signin(this.state.emailAddress, this.state.password);
-            if (result.ok) {
-                await updateState(this, { signedin: true });
-            }
-            else {
+            if (!result.ok) {
                 await updateState(this, { 
                     working: false,
                     errorMessage: result.errorMessage || "An error occurred" 
@@ -98,7 +91,7 @@ export class SignInUI extends React.Component<ISignInProps, ISignInState> {
     }
 
     render() {
-        if (this.state.signedin) {
+        if (this.authentication.isSignedIn()) {
             // Already signed in.
             return <Redirect to="/" />;
         }

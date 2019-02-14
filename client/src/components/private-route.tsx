@@ -7,7 +7,9 @@
 
 import * as React from 'react';
 import { Authentication, IAuthentication } from '../services/authentication';
-import { Route, Redirect } from 'react-router';
+import { Route, Redirect, RouteComponentProps } from 'react-router';
+import { asyncHandler } from '../utils/async-handler';
+import { updateState } from '../utils/update-state';
 
 export interface IPrivateRouteProps {
     //
@@ -19,38 +21,64 @@ export interface IPrivateRouteProps {
     // Set to true to match the path exactly.
     //
     exact?: boolean;
+
+    render?: ((props: RouteComponentProps<any>) => React.ReactNode);
 }
 
-export class PrivateRoute extends React.Component<IPrivateRouteProps, {}> {
+export interface IPrivateRouteState {
+}
 
-    private authentication: IAuthentication;
+export class PrivateRoute extends React.Component<IPrivateRouteProps, IPrivateRouteState> {
+
+    private authentication: IAuthentication = Authentication.getInstance(); //TODO: DI
 
     constructor(props: IPrivateRouteProps) {
         super(props);
 
-        //TODO: Would like to dependency inject these in the future.
-        this.authentication = Authentication.getInstance();
+        this.state = {};
+
+        this.onSigninCheckCompleted = this.onSigninCheckCompleted.bind(this);
+    }
+
+    componentDidMount() {
+        this.authentication.onSigninCheckCompleted.attach(this.onSigninCheckCompleted);
+    }
+
+    componentWillUnmount() {
+        this.authentication.onSigninCheckCompleted.detach(this.onSigninCheckCompleted);
+    }
+
+    onSigninCheckCompleted() {
+        this.forceUpdate();
     }
 
     render() {
 
-        //todo: if (this.authentication.isSignedIn()) {
+        if (!this.authentication.signinCheckCompleted()) {
             // 
-            // Already signed in, so render the actual component.
+            // Delay loading route until we have checked if the user is signed in.
+            //
+            return <div>Loading...</div>;
+        }
+        else if (this.authentication.isSignedIn()) {
+            // 
+            // User is signed in, so render the actual component.
             //
             return (
                 <Route 
                     path={this.props.path}
                     exact={this.props.exact}
+                    render={this.props.render}
                     >
                     {this.props.children}
                 </Route>
             );
-        /*
         }
         else {
+            // 
+            // User is not signed in, redirect them.
+            //
             return <Redirect to="/auth/signin" />;
         }
-        */
     }
 }

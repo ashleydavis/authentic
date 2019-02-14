@@ -3,12 +3,28 @@ import * as express from 'express';
 //
 // Helper for HTTP POST with async handler.
 //
-export function post(app: express.Express, route: string, handler: (req: express.Request, res: express.Response) => Promise<void>) {
+export function post(app: express.Router, route: string, handler: (req: express.Request, res: express.Response) => Promise<void>) {
     console.log("Registering HTTP POST " + route);
     app.post(route, (req, res) => {
         handler(req,  res)
             .catch(err => {
                 console.error("Error from handler: HTTP POST " + route);
+                console.error(err && err.stack || err);
+
+                res.sendStatus(500);
+            });
+    });
+}
+
+//
+// Helper for HTTP GET with async handler.
+//
+export function get(app: express.Router, route: string, handler: (req: express.Request, res: express.Response) => Promise<void>) {
+    console.log("Registering HTTP GET " + route);
+    app.get(route, (req, res) => {
+        handler(req,  res)
+            .catch(err => {
+                console.error("Error from handler: HTTP GET " + route);
                 console.error(err && err.stack || err);
 
                 res.sendStatus(500);

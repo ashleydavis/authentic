@@ -8,7 +8,9 @@ import { updateState } from '../../utils/update-state';
 import { validateEmail } from '../../utils/validate-email';
 import { Row } from '../../components/row';
 import { Spacer } from '../../components/spacer';
-import { terms, privacy } from '../legals';
+
+const terms = "TODO: terms and conditions.";
+const privacy = "TODO: privacy policy.";
 
 export interface ISignUpProps {
 }
@@ -307,7 +309,7 @@ export class SignUpUI extends React.Component<ISignUpProps, ISignUpState> {
                                 >
                                 <h1>Website Terms and Conditions of Use</h1>
                                 <Divider />
-                                <p>Coinstash Pty Ltd</p>
+                                <p>Your App Pty Ltd</p>
                                 {terms}
                                 <br />
                                 <Row>
@@ -340,7 +342,7 @@ export class SignUpUI extends React.Component<ISignUpProps, ISignUpState> {
                                 >
                                 <h1>Privacy policy</h1>
                                 <Divider />
-                                <p>Coinstash Pty Ltd</p>
+                                <p>Your App Pty Ltd</p>
                                 {privacy}
                                 <br />
                                 <Row>

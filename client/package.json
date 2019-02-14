@@ -4,27 +4,14 @@
   "description": "An example of using React with TypeScript, bundled using Docker / Docker-Compose.",
   "scripts": {
     "start": "webpack-dev-server --open",
-    "start:headless": "webpack-dev-server --host 0.0.0.0",
+    "start:headless": "webpack-dev-server --host 0.0.0.0 --port 5000",
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ashleydavis/react-typescript-docker-template.git"
-  },
-  "keywords": [
-    "react",
-    "typescript"
-  ],
-  "author": "ashley@codecapers.com.au",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/ashleydavis/react-typescript-docker-template/issues"
-  },
-  "homepage": "https://github.com/ashleydavis/react-typescript-docker-template#readme",
   "devDependencies": {
     "@types/axios": "^0.14.0",
     "@types/history": "^4.7.0",
+    "@types/node": "^10.12.18",
     "@types/react": "^16.4.18",
     "@types/react-dom": "^16.0.9",
     "@types/react-router-dom": "^4.3.1",

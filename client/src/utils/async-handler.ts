@@ -6,7 +6,7 @@ export function asyncHandler (self: any, handler: (...args: any[]) => Promise<vo
     return (...args: any[]): Promise<void> => {
         return handler.apply(self, args)
             .catch((err: any) => {
-                console.error("Error in handler.");
+                console.error("Error in async handler.");
                 console.error(err && err.stack || err);
             });
     };

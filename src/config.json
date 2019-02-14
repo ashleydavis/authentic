@@ -3,6 +3,6 @@
         "passwordResetSubject": "Password Reset",
         "confirmAccountSubject": "Account confirmation"
     },
-    "appName": "Coinstash",
+    "appName": "Authentication template",
     "host": "http://localhost:8080"
 }

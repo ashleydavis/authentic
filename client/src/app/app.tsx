@@ -12,6 +12,7 @@ import { SignUpConfirmedUI } from './auth/sign-up-confirmed';
 import { PrivateRoute } from '../components/private-route';
 import { PasswordResetRequestedUI } from './auth/password-reset-requested';
 import { ResetPasswordUI } from './auth/reset-password';
+import { asyncHandler } from '../utils/async-handler';
 
 export interface IAppProps {
 }
@@ -20,6 +21,20 @@ export interface IAppState {
 }
 
 export class AppUI extends React.Component<IAppProps, IAppState> {
+
+    private authentication: IAuthentication = Authentication.getInstance(); //TODO: DI
+
+    constructor(props: IAppProps) {
+        super(props);
+
+        this.state = {};
+
+        this.componentWillMount = asyncHandler(this, this.componentWillMount);
+    }
+
+    async componentWillMount(): Promise<void> {
+        await this.authentication.checkSignedIn();
+    }
 
     render() {
         return (

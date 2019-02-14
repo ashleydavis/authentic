@@ -10,9 +10,16 @@ conf.pushJsonFile(path.join(__dirname, "config.json"));
 const morganBody = require('morgan-body');
 import { initAuthApi } from './auth';
 
+import { get } from './utils/rest';
 // Constants
+const inProduction = process.env.NODE_ENV === "production";
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
+const DBHOST = process.env.DBHOST || "mongodb://localhost:27017";
+const DBNAME = process.env.DBNAME || "auth-test";
+const SESSIONDB = process.env.SESSIONDB || "mongodb://localhost:27017/" + DBNAME;
+console.log("Using DBHOST " + DBHOST);
+console.log("Using DB " + DBNAME);
 
 // App
 const app = express();
@@ -37,27 +44,16 @@ async function main() {
     console.log("Serving static files from " + staticPath);
     app.use(express.static(staticPath));
         
-    const dbHost = process.env.DBHOST || "mongodb://localhost:27017";
-    const client = await mongodb.MongoClient.connect(dbHost);
-    const db = client.db(process.env.DBNAME || "web");
-
-    app.get("/data", (req, res) => {
-        const collection = db.collection("mycollection");
-        collection.find().toArray()
-            .then(data => {
-                res.json(data);
-            })
-            .catch(err => {
-                console.error("Error retreiving data.");
-                console.error(err && err.stack || err);
-
-                res.sendStatus(500);
-            });
-    });
+    const publicPath = path.join(__dirname, "../public");
+    console.log("Serving static assets from " + publicPath);
+    app.use(express.static(publicPath));
+        
+    const client = await mongodb.MongoClient.connect(DBHOST);
+    const db = client.db(DBNAME);
 
     const MongoStore = connectMongo(session);
     const sessionStore = new MongoStore({
-        url: dbHost,
+        url: SESSIONDB,
         collection: "sessions",
         autoReconnect: true,
     });    
@@ -70,10 +66,28 @@ async function main() {
     }));
 
     app.use(bodyParser.json());
-    morganBody(app); //TODO: Dev only.
+    if (!inProduction) {
+        morganBody(app);
+    }
 
     app.use("/api/auth", initAuthApi(app, db));
 
+	// TODO: Add non-authenticated routes here.
+
+    // Every route after this point requires authentication.
+    app.use((req, res, next) => {
+        if (!req.user) {
+            // Not authenticated.
+            console.warn("API request from unauthenticated user.");
+            res.sendStatus(401);
+        }
+        else {
+            return next();
+        }
+    });
+
+	// TODO: Add authenticated routes here.
+    
     await startServer();
 }
 

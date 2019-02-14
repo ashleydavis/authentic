@@ -1,9 +1,19 @@
 import * as mailgun from 'mailgun-js';
 
 const inProduction = process.env.NODE_ENV === "production";
-export const MAILGUN_API_KEY = "4960f4fc7a590eb47e83cc5802e3dadc-9525e19d-9eb71c9e";
-export const DOMAIN_NAME = "coinstash.io";
-export const FROM_EMAIL = "verify@coinstash.io";
+
+if (!process.env.MAILGUN_API_KEY) {
+    throw new Error("Set environment variable MAILGUN_API_KEY.");
+}
+if (!process.env.DOMAIN_NAME) {
+    throw new Error("Set environment variable DOMAIN_NAME.");
+}
+if (!process.env.FROM_EMAIL) {
+    throw new Error("Set environment variable FROM_EMAIL.");
+}
+const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY as string;
+const DOMAIN_NAME = process.env.DOMAIN_NAME as string;
+const FROM_EMAIL = process.env.FROM_EMAIL as string;
 
 export interface IEmailMessage {
     to: string;

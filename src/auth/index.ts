@@ -134,13 +134,14 @@ function authenticate(req: Express.Request, res: express.Response): Promise<void
 }
 
 export function initAuthApi(app: express.Express, db: mongodb.Db): express.Router {
-    const authRouter = express.Router(); //NOTE: 'new' is not used with Router.
+    const router = express.Router(); //NOTE: 'new' is not used with Router.
 
     app.use(passport.initialize());
     app.use(passport.session());
 
     const usersCollection = db.collection("users");
 
+    
     passport.use(
         new LocalStrategy(
             {
@@ -197,7 +198,7 @@ export function initAuthApi(app: express.Express, db: mongodb.Db): express.Route
         "password": "fooey"
     }
     */
-    post(app, "/api/auth/register", async (req, res) => {
+    post(router, "/register", async (req, res) => {
 
         const email = verifyBodyParam("email", req).toLowerCase();
         const password = verifyBodyParam("password", req);
@@ -229,6 +230,8 @@ export function initAuthApi(app: express.Express, db: mongodb.Db): express.Route
             confirmationTokenExpires: Date.now() + confirmAccountTimeoutMillis,
             confirmed: false,
             signupDate: new Date(),
+
+			//TODO: Add initial user details here.
         });
 
         await sendSignupConfirmationEmail(email, confirmationToken, req.headers.host!);
@@ -238,7 +241,7 @@ export function initAuthApi(app: express.Express, db: mongodb.Db): express.Route
         });
     });
 
-    post(app, "/api/auth/resend-confirmation-email", async (req, res) => {
+    post(router, "/resend-confirmation-email", async (req, res) => {
 
         const curDate = Date.now();
 
@@ -267,7 +270,7 @@ export function initAuthApi(app: express.Express, db: mongodb.Db): express.Route
         "token": "<confirmation-token>"
     }
     */
-    post(app, "/api/auth/confirm", async (req, res) => {
+    post(router, "/confirm", async (req, res) => {
 
         const curDate = Date.now();
 
@@ -312,7 +315,7 @@ export function initAuthApi(app: express.Express, db: mongodb.Db): express.Route
         signedin: <boolean>
     }
     */    
-    app.get("/api/auth/signedin", (req, res) => {
+    router.get("/signedin", (req, res) => {
         const isSignedIn = !!req.user;
         res.json({ signedin: isSignedIn });
     });
@@ -325,14 +328,14 @@ export function initAuthApi(app: express.Express, db: mongodb.Db): express.Route
         "password": "a"
     }
     */
-    post(app, "/api/auth/signin", async (req, res) => {
+    post(router, "/signin", async (req, res) => {
         await authenticate(req, res);
     });
 
     /*
     HTTP POST /auth/signout
     */
-    app.post("/api/auth/signout", (req, res) => {
+    router.post("/signout", (req, res) => {
 
         const user = req.user;
         if (!user) {
@@ -353,7 +356,7 @@ export function initAuthApi(app: express.Express, db: mongodb.Db): express.Route
         "email": "a@a.com",
     }
     */
-    post(app, "/api/auth/request-password-reset", async (req, res) => {
+    post(router, "/request-password-reset", async (req, res) => {
 
         const email = verifyBodyParam("email", req).toLowerCase().trim();
 
@@ -396,7 +399,7 @@ export function initAuthApi(app: express.Express, db: mongodb.Db): express.Route
         "token": "token",
     }
     */
-   post(app, "/api/auth/reset-password", async (req, res) => {
+   post(router, "/reset-password", async (req, res) => {
     
         const email = verifyBodyParam("email", req).toLowerCase().trim();
         const password = verifyBodyParam("password", req);
@@ -446,7 +449,7 @@ export function initAuthApi(app: express.Express, db: mongodb.Db): express.Route
         "password": "fooey"
     }
     */    
-    post(app, "/api/auth/update-password", async (req, res) => {
+    post(router, "/update-password", async (req, res) => {
         if (!req.user) {
             // Fail if the user is not logged in.
             res.sendStatus(401);
@@ -471,5 +474,5 @@ export function initAuthApi(app: express.Express, db: mongodb.Db): express.Route
         res.sendStatus(200);
     });    
 
-    return authRouter;
+    return router;
 }
