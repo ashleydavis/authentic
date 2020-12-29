@@ -1,13 +1,9 @@
+# Authentic
 
-Express/Passport-based authentication template.
+A microservice for authentication.
 
-Pre reqs
+## To run in development
 
-    Have Vagrant and Virtual Box installed.
-
-To run
-
-    vagrant up
-    vagrant ssh
-    cd /vagrant
-    sudo docker-compose up --build
+```bash
+docker-compose up --build
+```
