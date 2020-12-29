@@ -1,0 +1,41 @@
+
+POST http://localhost:5002/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "someone@something.com",
+    "password": "fooey"
+}
+
+###
+
+# Copy token from console output of previous request.
+
+POST http://localhost:5002/api/auth/confirm
+Content-Type: application/json
+
+{
+    "email": "someone@something.com",
+    "token": "97b5dbec-17a3-4a84-971b-3b5beffb01e6"
+}
+
+###
+
+POST http://localhost:5002/api/auth/authenticate
+Content-Type: application/json
+
+{
+    "email": "someone@something.com",
+    "password": "fooey"
+}
+
+###
+
+# Copy token from response of previous request.
+
+POST http://localhost:5002/api/auth/validate
+Content-Type: application/json
+
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZmVhZmEyZGJiN2EyMjAwNDIwNzAwZDIiLCJ2IjoxLCJleHBpcnkiOiIyMDIxLTAxLTI5VDA5OjQzOjUyLjMxM1oiLCJpYXQiOjE2MDkyMzUwMzJ9.gnkNTwlFE15VPA82r8LQBvSnBeRUUA98cZuALMVw-xA"
+}
