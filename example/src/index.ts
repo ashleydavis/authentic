@@ -11,7 +11,7 @@ const HOST = process.env.HOST || "0.0.0.0";
 const app = express();
 
 /*async*/ function startServer() {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve => {
         app.listen(PORT, HOST, () => {
             console.log(`Running on http://${HOST}:${PORT}`);
             resolve();

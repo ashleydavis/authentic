@@ -51,15 +51,10 @@ interface IJwtPayload {
 const app = express();
 
 /*async*/ function startServer() {
-    return new Promise<void>((resolve, reject) => {
-        app.listen(PORT, HOST, (err: any) => {
-            if (err) {
-                reject(err);
-            }
-            else {
-                console.log(`Running on http://${HOST}:${PORT}`);
-                resolve();
-            }
+    return new Promise<void>(resolve => {
+        app.listen(PORT, HOST, () => {
+            console.log(`Running on http://${HOST}:${PORT}`);
+            resolve();
         });
     });
 }
@@ -381,9 +376,11 @@ async function main() {
         "id": "<user-id>",
         "token": "<auth-token>"
     }
+
     RESPONSE
     {
-        ok: <boolean>
+        ok: <boolean>,
+        id: <user-id>
     }
     */
     post(app, "/api/auth/validate", async (req, res) => {
