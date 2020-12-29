@@ -1,0 +1,10 @@
+FROM node:8
+
+WORKDIR /usr/src/app
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY webpack.config.js ./
+
+CMD npm config set cache-min 9999999 \
+    && npm install \
+    && npm run start:headless

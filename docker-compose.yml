@@ -15,49 +15,58 @@ services:
     image: mongo
     container_name: db
     ports:
-     - "27017:27017"
-    expose:
-      - "27017"
-    restart: "no"
-
-  web-dev:
-    image: web-dev
-    build: 
-      context: ./client
-      dockerfile: Dockerfile-dev
-    container_name: web-dev
-    volumes:
-     - ./tmp/npm-cache:/root/.npm:z
-     - ./client/src:/usr/src/app/src:z
-     - ./public:/usr/src/app/public:z
-    ports:
-     - "5000:5000"
-    depends_on:
-      - web
+     - "5003:27017"
     restart: always
 
-  web:
-    image: web
+  authentic:
+    image: authentic
     build: 
-      context: ./
+      context: ./authentic
       dockerfile: Dockerfile-dev
-    container_name: web
+    container_name: authentic
     volumes:
-      - ./tmp/npm-cache:/root/.npm:z
-      - ./src:/usr/src/app/src:z
-      - ./public:/usr/src/app/public:z
-      - ./templates:/usr/src/app/templates:z
+      - ./tmp/authentic/npm-cache:/root/.npm:z
+      - ./authentic/src:/usr/src/app/src:z
+      - ./authentic/templates:/usr/src/app/templates:z
     ports:
-     - "5001:80"
+     - "5002:80"
     environment:
       - PORT=80
-      - MESSAGING_HOST=amqp://guest:guest@rabbit:5672
       - DBHOST=mongodb://db:27017
-      - DBNAME=test
-      - SESSIONDB=mongodb://db:27017/test
+      - DBNAME=auth
       - NODE_ENV=development
       - MAILGUN_API_KEY=1234
       - DOMAIN_NAME=authtemplate.com
       - FROM_EMAIL=me@authtemplate.com
-    restart: always
+    restart: "no"
+
+  example-client:
+    image: example-client
+    build: 
+      context: ./example/client
+      dockerfile: Dockerfile-dev
+    container_name: example-client
+    volumes:
+     - /tmp/example-client/npm-cache:/root/.npm:z
+     - ./example/client/src:/usr/src/app/src:z
+    ports:
+     - "5000:5000"
+    depends_on:
+      - example
+    restart: "no"
+
+  example:
+    image: example
+    build: 
+      context: ./example
+      dockerfile: Dockerfile-dev
+    container_name: example
+    volumes:
+      - /tmp/example/npm-cache:/root/.npm:z
+      - ./example/src:/usr/src/app/src:z
+    ports:
+     - "5001:80"
+    environment:
+      - PORT=80
+    restart: "no"
 

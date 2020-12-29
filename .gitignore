@@ -4,3 +4,6 @@ node_modules/
 tmp/
 ubuntu-xenial-16.04-cloudimg-console.log
 todo.md
+run.log
+example/build/
+authentic/build/

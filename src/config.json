@@ -1,8 +1,0 @@
-{
-    "emails": {
-        "passwordResetSubject": "Password Reset",
-        "confirmAccountSubject": "Account confirmation"
-    },
-    "appName": "Authentication template",
-    "host": "http://localhost:8080"
-}

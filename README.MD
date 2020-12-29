@@ -7,3 +7,9 @@ A microservice for authentication.
 ```bash
 docker-compose up --build
 ```
+
+## Capture logging
+
+```bash
+docker-compose up --build 2>&1 | tee run.log
+```
