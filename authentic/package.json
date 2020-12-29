@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "bcrypt-nodejs": "0.0.3",
-    "body-parser": "^1.18.3",
+    "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "mailgun-js": "^0.22.0",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@types/bcrypt-nodejs": "0.0.30",
-    "@types/body-parser": "^1.17.0",
+    "@types/body-parser": "^1.19.0",
     "@types/express": "^4.17.9",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/mailgun-js": "^0.22.11",
