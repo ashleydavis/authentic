@@ -1,15 +1,13 @@
 import * as path from 'path';
 import * as express from 'express';
 import * as http from "http";
-
+import Axios from 'axios';
 const morganBody = require('morgan-body');
 
-// Constants
 const inProduction = process.env.NODE_ENV === "production";
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
 
-// App
 const app = express();
 
 /*async*/ function startServer() {
@@ -68,28 +66,67 @@ async function main() {
     forwardPost("/api/auth/register", "authentic");
     forwardPost("/api/auth/resend-confirmation-email", "authentic");
     forwardPost("/api/auth/confirm", "authentic");
-    forwardPost("/api/auth/signin", "authentic");
+    forwardPost("/api/auth/authenticate", "authentic");
     forwardPost("/api/auth/request-password-reset", "authentic");
     forwardPost("/api/auth/reset-password", "authentic");
-    forwardPost("/api/auth/update-password", "authentic");
 
-    //TODO: verify only by JWT.
+    app.get("/api/test1", (req, res) => {
+        res.json({
+            msg: "This data requires no authentication",
+        });
+    });
 
     // Every route after this point requires authentication.
     app.use((req, res, next) => {
-        next();
-        //todo:
-        // if (!req.user) {
-        //     // Not authenticated.
-        //     console.warn("API request from unauthenticated user.");
-        //     res.sendStatus(401);
-        // }
-        // else {
-        //     return next();
-        // }   
+
+        function authFailed() {
+            console.warn("API request from unauthenticated user.");
+            res.sendStatus(401);
+        }
+
+        console.log("Request headers:"); //fio:
+        console.log(req.headers);
+
+        if (!req.headers.authorization) {
+            authFailed();
+            return;
+        }
+
+        const token = req.headers.authorization.substring("Bearer ".length);
+
+        //
+        // TODO: This could be cached in this service for better performance.
+        //
+        Axios.post("http://authentic/api/auth/validate", {
+                token: token,
+            })
+            .then(response => {
+                if (!response.data.ok) {
+                    authFailed();
+                    return;
+                }
+                else {
+                    (req as any).userId = response.data.id;
+                    next();
+                }
+            })
+            .catch(err => {
+                console.error("Auth validation error:");
+                console.error(err && err.stack || err);
+                authFailed();
+            });
     });
 
-	// TODO: Add authenticated routes here.
+    // TODO: Add authenticated routes here.
+
+    forwardPost("/api/auth/update-password", "authentic");
+    forwardPost("/api/auth/validate", "authentic");
+    
+    app.get("/api/test2", (req, res) => {
+        res.json({
+            msg: "This data requires authentication",
+        });
+    });
     
     await startServer();
 }

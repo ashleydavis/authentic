@@ -7,3 +7,4 @@ todo.md
 run.log
 example/build/
 authentic/build/
+*.bak

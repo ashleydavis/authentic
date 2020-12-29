@@ -5,13 +5,15 @@ import * as bcrypt from 'bcrypt-nodejs';
 import * as passport from 'passport';
 import * as bodyParser from 'body-parser';
 import { Strategy as LocalStrategy } from 'passport-local';
+import { Strategy as JwtStrategy, ExtractJwt  } from 'passport-jwt';
 import * as uuid from 'uuid';
 import * as fs from "fs";
 import * as mustache from 'mustache';
 import { sendEmail } from './mailer';
+import * as jwt from "jsonwebtoken";
+import * as moment from "moment";
 const morganBody = require('morgan-body');
 
-// Constants
 const inProduction = process.env.NODE_ENV === "production";
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
@@ -25,7 +27,27 @@ console.log("Using DB " + DBNAME);
 //
 const templateFolderPath = path.join(__dirname, "../templates");
 
-// App
+const JWT_SECRET = "1234"; //TODO: env var.
+const JWT_ALGO = "HS256";
+const JWT_VERSION = 1; //TODO: env var.
+
+interface IJwtPayload {
+    //
+    // User ID.
+    //
+    sub: string;
+
+    // 
+    // JWT version number.
+    //
+    v: number;
+
+    //
+    // Expiry date for the token.
+    //
+    expiry: string;
+}
+
 const app = express();
 
 /*async*/ function startServer() {
@@ -48,6 +70,7 @@ async function main() {
     const db = client.db(DBNAME);
 
     app.use(bodyParser.json());
+
     if (!inProduction) {
         console.log("In development, registering morgan.");
         morganBody(app);
@@ -57,6 +80,70 @@ async function main() {
     app.use(passport.session());
 
     const usersCollection = db.collection("users");
+
+    //
+    // Validate a JWT payload and returns the user it represents.
+    //
+    async function validateJwtPayload(tokenPayload: IJwtPayload): Promise<any | undefined> {
+        if (!tokenPayload.sub || !tokenPayload.v || !tokenPayload.expiry) {
+            // Invalid payload.
+            return undefined;
+        }
+
+        if (tokenPayload.v !== JWT_VERSION) {
+            // Payload version is not valid.
+            return undefined;
+        }
+
+        const isExpired = moment(tokenPayload.expiry).isSameOrBefore(moment().utc());
+        if (isExpired) {
+            // Token has expired.
+            return undefined;
+        }
+
+        const userId = new mongodb.ObjectId(tokenPayload.sub);
+        const user = await usersCollection.findOne({ _id: userId }); //TODO: Database look should only be when starting a new app session.
+        if (!user) {
+            // User doesn't exist.
+            return undefined;
+        }
+
+        return user;
+    }
+
+    // https://medium.com/swlh/everything-you-need-to-know-about-the-passport-jwt-passport-js-strategy-8b69f39014b0
+    // https://github.com/mikenicholson/passport-jwt
+    passport.use(
+        new JwtStrategy(
+            {
+                jwtFromRequest: ExtractJwt.fromExtractors([
+                    ExtractJwt.fromAuthHeaderAsBearerToken(),
+                    ExtractJwt.fromUrlQueryParameter("t"),
+                ]),
+                secretOrKey: JWT_SECRET,
+                algorithms: [ JWT_ALGO ],
+            },            
+            (jwt_payload: IJwtPayload, done) => {
+                try {
+                    validateJwtPayload(jwt_payload)
+                        .then(user => {
+                            if (user) {
+                                done(null, user);
+                            }
+                            else {
+                                done(null, false);
+                            }
+                        })
+                        .catch(err => {
+                            done(err, false); 
+                        });
+                }
+                catch (err) {
+                    done(err, false);
+                }
+            }
+        )
+    );
 
     passport.use(
         new LocalStrategy(
@@ -95,7 +182,7 @@ async function main() {
             );
         }
     ));
-
+    
     passport.serializeUser((user: any, done) => {
         done(null, user._id.toString()); //TODO: This throws an error when trying to sign in an invalid user name.
     });
@@ -200,8 +287,6 @@ async function main() {
             confirmationTokenExpires: Date.now() + confirmAccountTimeoutMillis,
             confirmed: false,
             signupDate: new Date(),
-
-			//TODO: Add initial user details here.
         });
 
         await sendSignupConfirmationEmail(email, confirmationToken, req.headers.host!);
@@ -279,15 +364,46 @@ async function main() {
     });
 
     /*
-    HTTP POST /auth/signin
+    HTTP POST /auth/authenticate
     BODY
     {
         "email": "a@a.com",
         "password": "a"
     }
     */
-    post(app, "/api/auth/signin", async (req, res) => { //TODO: rename to 'authenticate'
-        await authenticate(req, res);
+    post(app, "/api/auth/authenticate", async (req, res) => {
+        await authenticateLocal(req, res);
+    });
+
+    /*
+    HTTP POST auth/validate
+    BODY
+    {
+        "id": "<user-id>",
+        "token": "<auth-token>"
+    }
+    RESPONSE
+    {
+        ok: <boolean>
+    }
+    */
+    post(app, "/api/auth/validate", async (req, res) => {
+
+        const token = verifyBodyParam("token", req);
+        const tokenPayload = jwt.verify(token, JWT_SECRET, { algorithms: [ JWT_ALGO ] }) as IJwtPayload;
+
+        const user = await validateJwtPayload(tokenPayload);
+        if (!user) {
+            // Not valid.
+            res.json({ ok: false });
+            return;
+        }
+
+        // Validated.
+        res.json({ 
+            ok: true, 
+            id: tokenPayload.sub,
+        });
     });
 
     /* 
@@ -414,23 +530,6 @@ async function main() {
             
         res.sendStatus(200);
     });    
-
-
-	// TODO: Add non-authenticated routes here.
-
-    // Every route after this point requires authentication.
-    app.use((req, res, next) => {
-        if (!req.user) {
-            // Not authenticated.
-            console.warn("API request from unauthenticated user.");
-            res.sendStatus(401);
-        }
-        else {
-            return next();
-        }
-    });
-
-	// TODO: Add authenticated routes here.
     
     await startServer();
 }
@@ -523,40 +622,91 @@ async function sendResetPasswordMail(email: string, token: string, host: string)
 //
 // Authenticate a user.
 //
-function authenticate(req: Express.Request, res: express.Response): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-        const authenticator = passport.authenticate('local', function (err, user, info) {
-            if (err) {
-                reject(err);
-                return;
-            }
+function authenticateLocal(req: Express.Request, res: express.Response): void {
+    const authenticator = passport.authenticate('local', function (err, user, info) {
+        if (err) {
+            res.sendStatus(500);
+            console.error(err && err.stack || err);
+            return;
+        }
 
-            if (!user) {
-                res.json({
-                    ok: false,
-                    errorMessage: "Unrecognised email or password.",
-                });
-                resolve(false);
-                return;
-            }
-
-            req.logIn(user, function (err) {
+        if (!user) {
+            res.json({
+                ok: false,
+                errorMessage: "Unrecognised email or password.",
+            });
+            return;
+        }
+        else {
+            req.logIn(user, (err) => {
                 if (err) {
-                    reject(err);
+                    res.sendStatus(500);
+                    console.error(err && err.stack || err);
                     return;
                 }
-
-                console.log("User signed in: " + user.email + " (" + user._id + ")");
-
-                res.json({
-                    ok: true,
-                    id: user._id,
-                });
-                
-                resolve(true);
+                else {
+                    console.log("User signed in via local strategy with: " + user.email + " (" + user._id + ")");
+        
+                    //
+                    // Create JWT.
+                    //
+                    // https://jwt.io/#debugger
+                    // https://www.npmjs.com/package/jsonwebtoken
+                    // 
+        
+                    const jwtPayload: IJwtPayload = {
+                        sub: user._id.toString(),
+                        v: JWT_VERSION,
+                        expiry: moment().add(1, "months").utc().toISOString(),
+                    };
+        
+                    const token = jwt.sign(jwtPayload, JWT_SECRET, { algorithm: JWT_ALGO });
+        
+                    res.json({
+                        ok: true,
+                        token: token,
+                        id: user._id,
+                    });
+                }    
             });
-        });
+        }
 
-        authenticator(req, res);
+    });
+
+    authenticator(req, res, (err: any) => {
+        if (err) {
+            console.error(err && err.stack || err);
+        }
     });
 }
+
+//
+// Authenticate a user.
+//
+export function authenticateJWT(req: Express.Request, res: express.Response, done: (user: any | undefined) => void): void {
+    const authenticator = passport.authenticate('jwt', function (err, user, info) {
+        if (err) {
+            console.error("Error authenticating with JWT.");
+            console.error(err && err.stack || err);
+            done(undefined);
+            return;
+        }
+
+        if (!user) {
+            done(undefined);
+            return;
+        }
+
+        console.log(`User signed ${user._id} authentiated via JWT strategy.`);
+
+        done(user);
+    });
+
+    authenticator(req, res, (err: any) => {
+        if (err) {
+            console.error(err && err.stack || err);
+            done(undefined);
+        }
+    });
+}
+

@@ -1,8 +1,6 @@
 import * as React from 'react';
 import { HashRouter, Route, Switch, Redirect, Link } from 'react-router-dom';
 import { HomeUI } from './home/home';
-import { Page1UI } from './page1/page1';
-import { Page2UI } from './page2/page2';
 import { Authentication, IAuthentication } from '../services/authentication';
 import { SignInUI } from './auth/sign-in';
 import { SignUpUI } from './auth/sign-up';
@@ -33,7 +31,7 @@ export class AppUI extends React.Component<IAppProps, IAppState> {
     }
 
     async componentWillMount(): Promise<void> {
-        //todo: Validate signed in state?
+        await this.authentication.checkSignedIn();
     }
 
     render() {

@@ -3,6 +3,7 @@
 //
 
 import axios from 'axios';
+import { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { IEventSource, EventSource, BasicEventHandler } from '../utils/event-source';
 
 export interface IAuthResponse {
@@ -10,6 +11,7 @@ export interface IAuthResponse {
     errorMessage?: string;
 }
 
+export const BASE_URL = ""; // Can set this to a different host if necessary.
 export interface IAuthentication {
 
     //
@@ -31,6 +33,11 @@ export interface IAuthentication {
     // Returns true if a user is currently known to be authenticated.
     //
     isSignedIn(): boolean;
+
+    //
+    // Asynchronously check if the user is currently signed in.
+    //
+    checkSignedIn(): Promise<boolean>;
     
     //
     // Returns true if a signin check with the server has completed.
@@ -76,6 +83,26 @@ export interface IAuthentication {
     // Confirm user's account.
     //
     confirm(email: string, token: string): Promise<IAuthResponse>;
+
+    //
+    // Make an authenticated HTTP GET request and return the response.
+    //
+    get<T = any>(route: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
+
+    //
+    // Make an authenticated HTTP POST request and return the response.
+    //
+    post<T = any>(route: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
+
+    //
+    // Make an authenticated HTTP PUT request and return the response.
+    //
+    put<T = any>(route: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
+
+    //
+    // Create an authenticated version of a URL.
+    //
+    makeAuthenticatedUrl(baseUrl: string, params?: any): string;
 }
 
 export class Authentication implements IAuthentication {
@@ -86,9 +113,9 @@ export class Authentication implements IAuthentication {
     private static instance: IAuthentication | null;
 
     //
-    // Set to true when the user is known to be currently signed in
+    // The authentication token allocated once signed in.
     //
-    private signedIn: boolean = false;
+    private authToken: string | undefined = undefined;
 
     //
     // Set to true when the signin check has been completed.
@@ -118,30 +145,66 @@ export class Authentication implements IAuthentication {
     //
     onSigninCheckCompleted: IEventSource<BasicEventHandler> = new EventSource<BasicEventHandler>();
     
+    private constructor() {
+        // Private constructor.
+    }
+
     //
     // Returns true if a user is currently known to be authenticated.
     //
     isSignedIn(): boolean {
-        return this.signedIn;
+        return this.authToken !== undefined;
     }
 
     //
-    // Update install state.
+    // Asynchronously check if the user is currently signed in.
     //
-    private updateSignedinState(nowSignedIn: boolean) {
-        const stateChanged = this.signedIn !== nowSignedIn;
-        this.signedIn = nowSignedIn;
-        this.signedInCheck = true;
-        if (stateChanged) {
-            if (this.signedIn) {
-                this.onSignedIn.raise();
+    async checkSignedIn(): Promise<boolean> {
+        const token = undefined; //TODO: (await storage.get({ key: "t" })).value || undefined; 
+        if (token) {
+            // Validate token.
+            const response = await axios.post(BASE_URL + "/api/auth/validate", {
+                token: token,
+            });
+
+            if (!response.data.ok) {
+                // Not validated.
+                await this.updateSignedinState(undefined, undefined);
+                return false;
             }
             else {
-                this.onSignedOut.raise();
+                await this.updateSignedinState(token, response.data.id);
             }
         }
+        else {
+            // Not signed in.
+            await this.updateSignedinState(undefined, undefined);
+        }
 
-        this.onSigninCheckCompleted.raise();
+        return this.isSignedIn();
+    }
+
+    //
+    // Update signedin state.
+    //
+    private async updateSignedinState(authToken: string | undefined, id: string | undefined): Promise<void> {
+        if (authToken === undefined) {
+            //TODO: await storage.remove({ key: "t" });
+        }
+        else {
+            //TODO: await storage.set({ key: "t", value: authToken });
+        }
+        
+        this.authToken = authToken;
+        this.signedInCheck = true;
+        if (id !== undefined && authToken !== undefined) {
+            await this.onSignedIn.raise();
+        }
+        else {
+            await this.onSignedOut.raise();
+        }
+
+        await this.onSigninCheckCompleted.raise();
     }
 
     //
@@ -155,12 +218,18 @@ export class Authentication implements IAuthentication {
     // Sign a user in.
     //
     async signin(email: string, password: string): Promise<IAuthResponse> {
-        const response = await axios.post("/api/auth/signin", {
+        const response = await axios.post(BASE_URL + "/api/auth/authenticate", {
             email: email,
             password: password,
         });
 
-        this.updateSignedinState(response.data.ok);
+        if (response.data.ok) {
+            await this.updateSignedinState(response.data.token, response.data.id);
+        }
+        else {
+            await this.updateSignedinState(undefined, undefined);
+        }
+
         return response.data;
     }
 
@@ -168,17 +237,16 @@ export class Authentication implements IAuthentication {
     // Sign a user out.
     //
     async signout(): Promise<void> {
-        await axios.post("/api/auth/signout");
-        this.updateSignedinState(false);
+        this.updateSignedinState(undefined, undefined);
     }
 
     //
     // Register a new user.
     //
     async register(email: string, password: string): Promise<IAuthResponse> {
-        const response = await axios.post("/api/auth/register", {
-            email: email,
-            password: password,
+        const response = await axios.post(BASE_URL + "/api/auth/register", {
+            email,
+            password,
         });
 
         return response.data;
@@ -188,7 +256,7 @@ export class Authentication implements IAuthentication {
     // Resend a confirmation email to an unconfirmed user.
     //
     async resendConfirmationEmail(email: string): Promise<void> {
-        await axios.post("/api/auth/resend-confirmation-email", {
+        await axios.post(BASE_URL + "/api/auth/resend-confirmation-email", {
             email: email,
         });
     }
@@ -197,7 +265,7 @@ export class Authentication implements IAuthentication {
     // Request a password reset for a user.
     //
     async requestPasswordReset(email: string): Promise<void> {
-        await axios.post("/api/auth/request-password-reset", {
+        await axios.post(BASE_URL + "/api/auth/request-password-reset", {
             email: email,
         });
     }
@@ -206,7 +274,7 @@ export class Authentication implements IAuthentication {
     // Set a user's password to a new value.
     //
     async resetPassword(email: string, password: string, token: string): Promise<IAuthResponse> {
-        const response = await axios.post("/api/auth/reset-password", {
+        const response = await axios.post(BASE_URL + "/api/auth/reset-password", {
             email: email,
             password: password,
             token: token,
@@ -219,7 +287,7 @@ export class Authentication implements IAuthentication {
     // Set a user's password to a new value.
     //
     async updatePassword(password: string): Promise<void> {
-        await axios.post("/api/auth/update-password", {
+        await this.post("/api/auth/update-password", {
             password: password,
         });
     }
@@ -228,11 +296,114 @@ export class Authentication implements IAuthentication {
     // Confirm user's account.
     //
     async confirm(email: string, token: string): Promise<IAuthResponse> {
-        const response = await axios.post("/api/auth/confirm", {
+        const response = await axios.post(BASE_URL + "/api/auth/confirm", {
             email: email,
             token: token,
         });
 
         return response.data;
+    }
+
+    //
+    // Create the Axios configuration object.
+    //
+    private makeConfiguration(config?: AxiosRequestConfig): AxiosRequestConfig {
+        if (!config) {
+            config = {};
+        }
+        else {
+            config = Object.assign({}, config); // Clone so as not to modify original.
+        }
+
+        if (this.authToken) {
+    
+            if (!config.headers) {
+                config.headers = {};
+            }
+    
+            config.headers.Authorization = `Bearer ${this.authToken}`;
+        }
+
+        return config;
+    }
+
+    //
+    // Make an authenticated HTTP GET request and return the response.
+    //
+    async get<T>(route: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+        const modifiedConfig = this.makeConfiguration(config);
+        try {
+            return await axios.get(BASE_URL + route, modifiedConfig);
+        }
+        catch (err) {
+            if (err.response && err.response.status === 401) {
+                // Token has expired, no longer authenticated.
+                this.updateSignedinState(undefined, undefined);
+            }
+            throw err;
+        }
+    }
+
+    //
+    // Make an authenticated HTTP POST request and return the response.
+    //
+    async post<T = any>(route: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+        const modifiedConfig = this.makeConfiguration(config);
+        try {
+            return await axios.post(BASE_URL + route, data, modifiedConfig);
+        }
+        catch (err) {
+            if (err.response && err.response.status === 401) {
+                // Token has expired, no longer authenticated.
+                this.updateSignedinState(undefined, undefined);
+            }
+            throw err;
+        }
+    }
+
+    //
+    // Make an authenticated HTTP PUT request and return the response.
+    //
+    async put<T = any>(route: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+        const modifiedConfig = this.makeConfiguration(config);
+        try {
+            return await axios.put(BASE_URL + route, data, modifiedConfig);
+        }
+        catch (err) {
+            if (err.response && err.response.status === 401) {
+                // Token has expired, no longer authenticated.
+                this.updateSignedinState(undefined, undefined);
+            }
+            throw err;
+        }
+    }
+
+    //
+    // Create an authenticated version of a URL.
+    //
+    makeAuthenticatedUrl(baseUrl: string, params?: any): string {
+        if (!params) {
+            params = { t: this.authToken };
+        }
+        else {
+            params = Object.assign({}, params, { t: this.authToken });
+        }
+
+        let first = true;
+        let url = BASE_URL + baseUrl;
+
+        for (const key of Object.keys(params)) {
+            if (first) {
+                first = false;
+                url += `?`;
+            }
+            else {
+                url += '&';
+            }
+
+            url += `${key}=${params[key]}`;
+        }
+
+        return url;
     }
 }

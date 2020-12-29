@@ -56,7 +56,13 @@ export class PrivateRoute extends React.Component<IPrivateRouteProps, IPrivateRo
 
     render() {
 
-        if (this.authentication.isSignedIn()) {
+        if (!this.authentication.signinCheckCompleted()) {
+            // 
+            // Delay loading route until we have checked if the user is signed in.
+            //
+            return <div>Loading...</div>;
+        }
+        else if (this.authentication.isSignedIn()) {
             // 
             // User is signed in, so render the actual component.
             //
