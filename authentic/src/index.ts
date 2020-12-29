@@ -466,10 +466,10 @@ function validatePassword(user: any, password: string): Promise<boolean> {
 //
 // Send an email to the user asking them to confirm their account.
 //
-async function sendSignupConfirmationEmail(email: string, token: string, url: string): Promise<void> {
+async function sendSignupConfirmationEmail(email: string, token: string, host: string): Promise<void> {
 
     console.log("Sending confirmation email to " + email);
-
+    
     const emailSubject = "Account confirmation"; //TODO: From env var.
     const templateFilePath = path.join(templateFolderPath, "confirm-account-email.template");
     console.log("Loading email template from " + templateFilePath);
@@ -478,10 +478,9 @@ async function sendSignupConfirmationEmail(email: string, token: string, url: st
     const emailText = mustache.render(
         emailTemplate,
         {
-            appName: "Authentication template", //TODO: from env.
-            url: url,
-            token: token,
-            email: encodeURIComponent(email),
+	        TOKEN: token, 
+	        HOST: host,
+	        EMAIL: encodeURIComponent(email),
         }
     );
     
@@ -497,7 +496,7 @@ async function sendSignupConfirmationEmail(email: string, token: string, url: st
 //
 // Send an email to the user with a link to reset their password.
 //
-async function sendResetPasswordMail (email: string, token: string, url: string) {
+async function sendResetPasswordMail(email: string, token: string, host: string) {
 
     const emailSubject = "Password Reset"; //todo: env var
 
@@ -508,9 +507,9 @@ async function sendResetPasswordMail (email: string, token: string, url: string)
     const emailText = mustache.render(
         emailTemplate,
         {
-            url: url,
-            token: token,
-            email: encodeURIComponent(email),
+	        TOKEN: token, 
+	        HOST: host,
+	        EMAIL: encodeURIComponent(email),
         }
     );
 
@@ -524,8 +523,8 @@ async function sendResetPasswordMail (email: string, token: string, url: string)
 //
 // Authenticate a user.
 //
-function authenticate(req: Express.Request, res: express.Response): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+function authenticate(req: Express.Request, res: express.Response): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
         const authenticator = passport.authenticate('local', function (err, user, info) {
             if (err) {
                 reject(err);
@@ -537,6 +536,7 @@ function authenticate(req: Express.Request, res: express.Response): Promise<void
                     ok: false,
                     errorMessage: "Unrecognised email or password.",
                 });
+                resolve(false);
                 return;
             }
 
@@ -550,8 +550,10 @@ function authenticate(req: Express.Request, res: express.Response): Promise<void
 
                 res.json({
                     ok: true,
+                    id: user._id,
                 });
-                resolve();
+                
+                resolve(true);
             });
         });
 
