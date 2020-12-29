@@ -77,7 +77,6 @@ async function main() {
     }
 
     app.use(passport.initialize());
-    app.use(passport.session());
 
     const usersCollection = db.collection("users");
 
@@ -682,6 +681,7 @@ function authenticateLocal(req: Express.Request, res: express.Response): void {
 
 //
 // Authenticate a user.
+// TODO: This isn't really used.
 //
 export function authenticateJWT(req: Express.Request, res: express.Response, done: (user: any | undefined) => void): void {
     const authenticator = passport.authenticate('jwt', function (err, user, info) {
