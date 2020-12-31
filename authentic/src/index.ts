@@ -402,6 +402,41 @@ async function main() {
         });
     });
 
+    /*
+    HTTP POST auth/refresh
+    BODY
+    {
+        "token": "<auth-token>"
+    }
+
+    RESPONSE
+    {
+        ok: <boolean>,
+        token: <refreshed-token>
+    }
+    */
+    post(app, "/api/auth/refresh", async (req, res) => {
+
+        const token = verifyBodyParam("token", req);
+        const tokenPayload = jwt.verify(token, JWT_SECRET, { algorithms: [ JWT_ALGO ] }) as IJwtPayload;
+
+        const user = await validateJwtPayload(tokenPayload);
+        if (!user) {
+            // Not valid.
+            res.json({ ok: false });
+            return;
+        }
+
+        const newToken = issueToken(user);
+
+        // Validated.
+        res.json({ 
+            ok: true, 
+            token: newToken,
+            id: user._id,
+        });
+    });
+
     /* 
     HTTP POST /auth/request-password-reset
     BODY
@@ -650,13 +685,7 @@ function authenticateLocal(req: Express.Request, res: express.Response): void {
                     // https://www.npmjs.com/package/jsonwebtoken
                     // 
         
-                    const jwtPayload: IJwtPayload = {
-                        sub: user._id.toString(),
-                        v: JWT_VERSION,
-                        expiry: moment().add(1, "months").utc().toISOString(),
-                    };
-        
-                    const token = jwt.sign(jwtPayload, JWT_SECRET, { algorithm: JWT_ALGO });
+                    const token = issueToken(user);
         
                     res.json({
                         ok: true,
@@ -674,6 +703,20 @@ function authenticateLocal(req: Express.Request, res: express.Response): void {
             console.error(err && err.stack || err);
         }
     });
+}
+
+//
+// Issues a JWT for a user.
+//
+function issueToken(user: any) {
+    const jwtPayload: IJwtPayload = {
+        sub: user._id.toString(),
+        v: JWT_VERSION,
+        expiry: moment().add(1, "months").utc().toISOString(),
+    };
+
+    const token = jwt.sign(jwtPayload, JWT_SECRET, { algorithm: JWT_ALGO });
+    return token;
 }
 
 //

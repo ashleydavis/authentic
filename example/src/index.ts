@@ -121,6 +121,7 @@ async function main() {
 
     forwardPost("/api/auth/update-password", "authentic");
     forwardPost("/api/auth/validate", "authentic");
+    forwardPost("/api/auth/refresh", "authentic");
     
     app.get("/api/test2", (req, res) => {
         res.json({
