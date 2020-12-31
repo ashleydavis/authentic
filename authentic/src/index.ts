@@ -561,6 +561,14 @@ async function main() {
             
         res.sendStatus(200);
     });    
+
+    //
+    // Gets the user list.
+    //
+    get(app, "/api/users", async (req, res) => {
+        const users = await usersCollection.find().toArray();
+        res.json(users);
+    });
     
     await startServer();
 }

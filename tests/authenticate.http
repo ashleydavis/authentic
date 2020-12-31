@@ -50,3 +50,11 @@ Content-Type: application/json
 {
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZmVkMTRlNjAzNTAzNjAwNmM5NjZmY2YiLCJ2IjoxLCJleHBpcnkiOiIyMDIxLTAxLTMxVDAwOjAyOjA2LjAxMloiLCJpYXQiOjE2MDkzNzI5MjZ9.LY-CJ38kBcxJjK09lhmhmpQIL-5HHEnNULiSEQigsY4"
 }
+
+###
+
+POST http://localhost:5002/api/users
+Content-Type: application/json
+
+{
+}
