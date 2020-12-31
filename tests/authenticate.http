@@ -16,7 +16,7 @@ Content-Type: application/json
 
 {
     "email": "someone@something.com",
-    "token": "aa925b17-b853-420d-815f-c0cd855338a4"
+    "token": "b9c8b158-9bc3-4fe8-9b35-c3c66878bebc"
 }
 
 ###
@@ -37,5 +37,16 @@ POST http://localhost:5002/api/auth/validate
 Content-Type: application/json
 
 {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZmVhZmQyNDcxZGU2NDAwNTY5MmU0NmMiLCJ2IjoxLCJleHBpcnkiOiIyMDIxLTAxLTI5VDA5OjU2OjIxLjg0MFoiLCJpYXQiOjE2MDkyMzU3ODF9.HnsABDgwBVw-i9zY6CIkrXOZhrdBYzvb_MY5YzieiaY"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZmVkMTRlNjAzNTAzNjAwNmM5NjZmY2YiLCJ2IjoxLCJleHBpcnkiOiIyMDIxLTAxLTMxVDAwOjAyOjA2LjAxMloiLCJpYXQiOjE2MDkzNzI5MjZ9.LY-CJ38kBcxJjK09lhmhmpQIL-5HHEnNULiSEQigsY4"
+}
+
+###
+
+# Copy token from response of previous request.
+
+POST http://localhost:5002/api/auth/refresh
+Content-Type: application/json
+
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZmVkMTRlNjAzNTAzNjAwNmM5NjZmY2YiLCJ2IjoxLCJleHBpcnkiOiIyMDIxLTAxLTMxVDAwOjAyOjA2LjAxMloiLCJpYXQiOjE2MDkzNzI5MjZ9.LY-CJ38kBcxJjK09lhmhmpQIL-5HHEnNULiSEQigsY4"
 }
