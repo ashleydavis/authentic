@@ -1,5 +1,6 @@
 import { main } from "../";
 import axios from "axios";
+import * as mongodb from "mongodb";
 
 const baseUrl = "http://localhost:3000";
 
@@ -48,14 +49,44 @@ describe("authentic", () => {
     
         expect(confirmResponse.status).toBe(200);
     }
+
+    //
+    // Returns true if a collection exists.
+    //
+    async function collectionExists(db: mongodb.Db, collectionName: string): Promise<boolean> {
+        const collections = await db.listCollections().toArray();
+        return collections.some(collection => collection.name === collectionName);
+    }    
+
+    //
+    // Drops a collection from the database.
+    //
+    async function dropCollection(db: mongodb.Db, collectionName: string): Promise<void> {
+        const exists = await collectionExists(db, collectionName);
+        if (exists) {
+            await db.collection(collectionName).drop();
+        }
+    }
     
-    
-    it("can register and then confirm new user", async () => {
+    it("can register new user", async () => {
 
         const microservice = await main();
 
-        const usersCollection = microservice.db.collection("users");
-        await usersCollection.drop();
+        await dropCollection(microservice.db, "users");
+
+        const confirmationToken = await registerNewUser();
+        expect(confirmationToken).toBeDefined();
+
+        await microservice.stop();
+
+    });
+
+    
+    it("can confirm new user", async () => {
+
+        const microservice = await main();
+
+        await dropCollection(microservice.db, "users");
 
         const confirmationToken = await registerNewUser();
 
