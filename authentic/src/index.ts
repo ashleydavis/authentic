@@ -78,7 +78,7 @@ export interface IMicroservice {
 
 export async function main(): Promise<IMicroservice> {
 
-    const client = await mongodb.MongoClient.connect(DBHOST);
+    const client = await mongodb.MongoClient.connect(DBHOST, { useUnifiedTopology: true });
     const db = client.db(DBNAME);
 
     app.use(bodyParser.json());
