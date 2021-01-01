@@ -53,7 +53,7 @@ Content-Type: application/json
 
 ###
 
-POST http://localhost:5002/api/users
+GET http://localhost:5002/api/users
 Content-Type: application/json
 
 {
