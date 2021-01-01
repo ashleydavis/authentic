@@ -1,0 +1,20 @@
+#
+# Help
+#
+# Docs:
+# https://docs.docker.com/compose/compose-file
+#
+# The z/Z flags for volumes:
+# https://stackoverflow.com/a/35222815/25868
+#
+
+version: '3'
+services:
+
+  db:
+    image: mongo:4.2.8
+    container_name: db
+    ports:
+     - "6000:27017"
+    restart: always
+

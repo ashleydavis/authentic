@@ -12,6 +12,7 @@ import * as mustache from 'mustache';
 import { sendEmail } from './mailer';
 import * as jwt from "jsonwebtoken";
 import * as moment from "moment";
+import { Server } from 'http';
 const morganBody = require('morgan-body');
 
 const inProduction = process.env.NODE_ENV === "production";
@@ -51,15 +52,31 @@ interface IJwtPayload {
 const app = express();
 
 /*async*/ function startServer() {
-    return new Promise<void>(resolve => {
-        app.listen(PORT, HOST, () => {
+    return new Promise<Server>(resolve => {
+        const server = app.listen(PORT, HOST, () => {
             console.log(`Running on http://${HOST}:${PORT}`);
-            resolve();
+            resolve(server);
         });
     });
 }
 
-async function main() {
+//
+// Interface that represents the running microservice.
+// 
+export interface IMicroservice {
+
+    //
+    // Stops the microservice.
+    //
+    stop(): Promise<void>;
+
+    //
+    // The microservice's database.
+    //
+    db: mongodb.Db;
+}
+
+export async function main(): Promise<IMicroservice> {
 
     const client = await mongodb.MongoClient.connect(DBHOST);
     const db = client.db(DBNAME);
@@ -108,7 +125,7 @@ async function main() {
     // https://medium.com/swlh/everything-you-need-to-know-about-the-passport-jwt-passport-js-strategy-8b69f39014b0
     // https://github.com/mikenicholson/passport-jwt
     passport.use(
-        new JwtStrategy(
+        new JwtStrategy( //TODO: This isn't really used.
             {
                 jwtFromRequest: ExtractJwt.fromExtractors([
                     ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -516,16 +533,29 @@ async function main() {
         res.json(users);
     });
     
-    await startServer();
+    const server = await startServer();
+
+    return {
+        stop: async () => {
+            await server.close();
+            await client.close();
+        },
+
+        db: db,
+    };
 }
 
-main() 
-    .then(() => console.log("Online"))
-    .catch(err => {
-        console.error("Failed to start!");
-        console.error(err && err.stack || err);
-    });
-
+if (require.main === module) {
+    //
+    // Starting as a microservice, not starting for testing.
+    //
+    main() 
+        .then(() => console.log("Online"))
+        .catch(err => {
+            console.error("Failed to start!");
+            console.error(err && err.stack || err);
+        });
+}
 //
 // Validate a user's password.
 //
