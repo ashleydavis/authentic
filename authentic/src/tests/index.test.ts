@@ -314,11 +314,38 @@ describe("authentic", () => {
         expect(user.hash).toBeUndefined();
     });
 
+    it("can get user", async () => {
+
+        await registerNewUser("me@you.com", "1234");
+
+        const usersResponse = await axios.get(`${baseUrl}/api/users`);
+        const userId = usersResponse.data[0]._id;
+
+        const userResponse = await axios.get(`${baseUrl}/api/user?id=${userId}`);
+
+        expect(userResponse.status).toBe(200);
+        
+        const user = userResponse.data;
+        expect(user.email).toEqual("me@you.com");
+    });
+
+    it("user api doesn't reveal password hash", async () => {
+
+        await registerNewUser("me@you.com", "1234");
+
+        const usersResponse = await axios.get(`${baseUrl}/api/users`);
+        const userId = usersResponse.data[0]._id;
+
+        const userResponse = await axios.get(`${baseUrl}/api/user?id=${userId}`);
+
+        expect(userResponse.status).toBe(200);
+
+        const user = userResponse.data;
+        expect(user.hash).toBeUndefined();
+    });
+
     //todo:
     //
-    // can get user
-    //      by id
-    //      by token
     // must provide valid email
     // must provide valid password
     // can't register user more than once
@@ -327,6 +354,4 @@ describe("authentic", () => {
     // invalid token is not validated
     // check that no unecessary fields are leaked out of the api
     // password is stored as hash and not plain text
-    // users api doesn't return pw
-    // user api doesn't return pw
 });

@@ -523,6 +523,15 @@ export async function main(): Promise<IMicroservice> {
     });    
 
     //
+    // Gets a particular user.
+    //
+    get(app, "/api/user", async (req, res) => {
+        const userId = new mongodb.ObjectID(verifyQueryParam("id", req));
+        const users = await usersCollection.findOne({ _id: userId }, { projection: { hash: 0, } });
+        res.json(users);
+    });
+
+    //
     // Gets the user list.
     //
     get(app, "/api/users", async (req, res) => {
