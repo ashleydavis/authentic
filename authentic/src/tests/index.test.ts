@@ -284,10 +284,38 @@ describe("authentic", () => {
         expect(authenticateResponse2.status).toBe(200);
     });
 
+    it("can get users", async () => {
+
+        await registerNewUser("me@you.com", "1234");
+        await registerNewUser("you@me.com", "ABCD");
+
+        const usersResponse = await axios.get(`${baseUrl}/api/users`);
+
+        expect(usersResponse.status).toBe(200);
+        expect(usersResponse.data.length).toBe(2);
+
+        const user1 = usersResponse.data[0];
+        expect(user1.email).toEqual("me@you.com");
+
+        const user2 = usersResponse.data[1];
+        expect(user2.email).toEqual("you@me.com");
+    });
+
+    it("users api doesn't reveal password hash", async () => {
+
+        await registerNewUser("me@you.com", "1234");
+
+        const usersResponse = await axios.get(`${baseUrl}/api/users`);
+
+        expect(usersResponse.status).toBe(200);
+        expect(usersResponse.data.length).toBe(1);
+
+        const user = usersResponse.data[0];
+        expect(user.hash).toBeUndefined();
+    });
+
     //todo:
     //
-    // can update password
-    // can get users
     // can get user
     //      by id
     //      by token
@@ -298,4 +326,7 @@ describe("authentic", () => {
     // user is not authenticated when password is wrong
     // invalid token is not validated
     // check that no unecessary fields are leaked out of the api
+    // password is stored as hash and not plain text
+    // users api doesn't return pw
+    // user api doesn't return pw
 });

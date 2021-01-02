@@ -526,7 +526,7 @@ export async function main(): Promise<IMicroservice> {
     // Gets the user list.
     //
     get(app, "/api/users", async (req, res) => {
-        const users = await usersCollection.find().toArray();
+        const users = await usersCollection.find({}, { projection: { hash: 0, } }).toArray();
         res.json(users);
     });
     
