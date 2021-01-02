@@ -343,15 +343,4 @@ describe("authentic", () => {
         const user = userResponse.data;
         expect(user.hash).toBeUndefined();
     });
-
-    //todo:
-    //
-    // must provide valid email
-    // must provide valid password
-    // can't register user more than once
-    // user is not authenticated when email isn't recognised
-    // user is not authenticated when password is wrong
-    // invalid token is not validated
-    // check that no unecessary fields are leaked out of the api
-    // password is stored as hash and not plain text
 });
