@@ -497,24 +497,21 @@ export async function main(): Promise<IMicroservice> {
 
     /* BODY
     {
+        "token": "jwt",
         "password": "fooey"
     }
     */    
     post(app, "/api/auth/update-password", async (req, res) => {
-        if (!req.user) {
-            // Fail if the user is not logged in.
-            res.sendStatus(401);
-            return;
-        }
 
+        const token = verifyBodyParam("token", req);
         const password = verifyBodyParam("password", req);
 
-        console.log("Changing password for user : " + req.user._id);
+        const tokenPayload = jwt.verify(token, JWT_SECRET, { algorithms: [ JWT_ALGO ] }) as IJwtPayload;
 
         const hash = bcrypt.hashSync(password);
 
         await usersCollection.updateOne(
-            { _id: req.user._id },
+            { _id: new mongodb.ObjectID(tokenPayload.sub) },
             {
                 $set: {
                     hash:  hash,

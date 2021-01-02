@@ -254,11 +254,40 @@ describe("authentic", () => {
         expect(authenticateResponse.status).toBe(200);
     });
 
+    it("can update password", async () => {
+
+        const confirmationToken = await registerNewUser();
+        await confirmNewUser(confirmationToken);
+
+        const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
+            "email": "someone@something.com",
+            "password": "fooey"
+        });
+
+        const token = authenticateResponse.data.token;
+
+        const updatePwdResponse = await axios.post(`${baseUrl}/api/auth/update-password`, {
+            "token": token,
+            "password": "blah"
+        });
+
+        expect(updatePwdResponse.status).toBe(200);
+
+        const authenticateResponse2 = await axios.post(`${baseUrl}/api/auth/authenticate`, {
+            "email": "someone@something.com",
+            "password": "blah"
+        });
+
+        expect(authenticateResponse2.status).toBe(200);
+    });
+
     //todo:
     //
-    // can reset password
     // can update password
     // can get users
+    // can get user
+    //      by id
+    //      by token
     // must provide valid email
     // must provide valid password
     // can't register user more than once
