@@ -153,7 +153,27 @@ describe("authentic", () => {
         expect(authenticateResponse.data.ok).toBe(true);
         expect(authenticateResponse.data.id).toBeDefined();
         expect(authenticateResponse.data.token).toBeDefined();
-});
+    });
+
+    it('can validate token', async () => {
+
+        const confirmationToken = await registerNewUser();
+        await confirmNewUser(confirmationToken);
+
+        const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
+            "email": "someone@something.com",
+            "password": "fooey"
+        });
+
+        const token = authenticateResponse.data.token;
+        const validateResponse = await axios.post(`${baseUrl}/api/auth/validate`, {
+            "token": token,
+        });
+
+        expect(authenticateResponse.status).toBe(200);
+        expect(authenticateResponse.data.ok).toBe(true);
+        expect(authenticateResponse.data.id).toBeDefined();
+    });
 
     //todo:
     //
