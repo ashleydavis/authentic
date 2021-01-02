@@ -199,7 +199,10 @@ describe("authentic", () => {
 
     //todo:
     //
-    // password reset
+    // can request password reset
+    // can reset password
+    // can update password
+    // can get users
     // must provide valid email
     // must provide valid password
     // can't register user more than once
