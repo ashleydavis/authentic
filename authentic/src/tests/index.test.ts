@@ -10,7 +10,7 @@ const baseUrl = "http://localhost:3000";
 //
 async function captureOutput(fn: () => Promise<void>): Promise<string> {
 
-    const mockConsole = jest.spyOn(global.console, 'log');
+    const mockConsole = jest.spyOn(global.console, 'log').mockImplementation(() => {});
 
     await fn();
 

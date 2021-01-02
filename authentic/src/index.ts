@@ -15,13 +15,24 @@ import * as moment from "moment";
 import { Server } from 'http';
 const morganBody = require('morgan-body');
 
+const isVerbose = process.env.VERBOSE === "true";
 const inProduction = process.env.NODE_ENV === "production";
+const inDevelpment = process.env.NODE_ENV === "development"; 
+const inTesting = process.env.NODE_ENV === "testing"; 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
 const DBHOST = process.env.DBHOST || "mongodb://localhost:27017";
 const DBNAME = process.env.DBNAME || "auth-test";
-console.log("Using DBHOST " + DBHOST);
-console.log("Using DB " + DBNAME);
+
+function verbose(msg: string): void {
+    if (isVerbose) {
+        console.log(msg);
+    }
+}
+
+
+verbose("Using DBHOST " + DBHOST);
+verbose("Using DB " + DBNAME);
 
 //
 // Folder with email templates.
@@ -54,7 +65,7 @@ const app = express();
 /*async*/ function startServer() {
     return new Promise<Server>(resolve => {
         const server = app.listen(PORT, HOST, () => {
-            console.log(`Running on http://${HOST}:${PORT}`);
+            verbose(`Running on http://${HOST}:${PORT}`);
             resolve(server);
         });
     });
@@ -83,8 +94,8 @@ export async function main(): Promise<IMicroservice> {
 
     app.use(bodyParser.json());
 
-    if (!inProduction) {
-        console.log("In development, registering morgan.");
+    if (inDevelpment) {
+        verbose("In development, registering morgan.");
         morganBody(app);
     }
 
@@ -217,7 +228,7 @@ export async function main(): Promise<IMicroservice> {
         const email = verifyBodyParam("email", req).toLowerCase();
         const password = verifyBodyParam("password", req);
 
-        console.log("Registering new user: " + email);
+        verbose("Registering new user: " + email);
 
         //
         // Check the user doesn't already exist.
@@ -556,7 +567,7 @@ if (require.main === module) {
     // Starting as a microservice, not starting for testing.
     //
     main() 
-        .then(() => console.log("Online"))
+        .then(() => verbose("Online"))
         .catch(err => {
             console.error("Failed to start!");
             console.error(err && err.stack || err);
@@ -588,11 +599,11 @@ function validatePassword(user: any, password: string): Promise<boolean> {
 //
 async function sendSignupConfirmationEmail(email: string, token: string, host: string): Promise<void> {
 
-    console.log("Sending confirmation email to " + email);
+    verbose("Sending confirmation email to " + email);
     
     const emailSubject = "Account confirmation"; //TODO: From env var.
     const templateFilePath = path.join(templateFolderPath, "confirm-account-email.template");
-    console.log("Loading email template from " + templateFilePath);
+    verbose("Loading email template from " + templateFilePath);
     const emailTemplate = fs.readFileSync(templateFilePath, "utf8");
 
     const emailText = mustache.render(
@@ -610,7 +621,7 @@ async function sendSignupConfirmationEmail(email: string, token: string, host: s
         text: emailText,
     });
 
-    console.log("Sent confirmation email to " + email);
+    verbose("Sent confirmation email to " + email);
 };    
 
 //
@@ -621,7 +632,7 @@ async function sendResetPasswordMail(email: string, token: string, host: string)
     const emailSubject = "Password Reset"; //todo: env var
 
     const templateFilePath = path.join(templateFolderPath, "password-reset-email.template");
-    console.log("Loading email template from " + templateFilePath);		
+    verbose("Loading email template from " + templateFilePath);		
     const emailTemplate = fs.readFileSync(templateFilePath, "utf8");
 
     const emailText = mustache.render(
@@ -666,7 +677,7 @@ function authenticateLocal(req: Express.Request, res: express.Response): void {
                     return;
                 }
                 else {
-                    console.log("User signed in via local strategy with: " + user.email + " (" + user._id + ")");
+                    verbose("User signed in via local strategy with: " + user.email + " (" + user._id + ")");
         
                     //
                     // Create JWT.
@@ -727,7 +738,7 @@ export function authenticateJWT(req: Express.Request, res: express.Response, don
             return;
         }
 
-        console.log(`User signed ${user._id} authentiated via JWT strategy.`);
+        verbose(`User signed ${user._id} authentiated via JWT strategy.`);
 
         done(user);
     });
@@ -744,9 +755,9 @@ export function authenticateJWT(req: Express.Request, res: express.Response, don
 // Helper for HTTP POST with async handler.
 //
 function post(app: express.Router, route: string, handler: (req: express.Request, res: express.Response) => Promise<void>) {
-    console.log("Registering HTTP POST " + route);
+    verbose("Registering HTTP POST " + route);
     app.post(route, (req, res) => {
-        console.log("Handling HTTP POST " + route);
+        verbose("Handling HTTP POST " + route);
         handler(req,  res)
             .catch(err => {
                 console.error("Error from handler: HTTP POST " + route);
@@ -761,7 +772,7 @@ function post(app: express.Router, route: string, handler: (req: express.Request
 // Helper for HTTP GET with async handler.
 //
 function get(app: express.Router, route: string, handler: (req: express.Request, res: express.Response) => Promise<void>) {
-    console.log("Registering HTTP GET " + route);
+    verbose("Registering HTTP GET " + route);
     app.get(route, (req, res) => {
         handler(req,  res)
             .catch(err => {
