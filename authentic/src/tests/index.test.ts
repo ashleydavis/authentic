@@ -76,6 +76,15 @@ function validateGuid(guid: string): void {
 }
 
 //
+// Extracts the password rest token from debug output.
+//
+function extractPasswordResetToken(output: string) {
+    const match = /reset-password\/(.*)\?/g.exec(output);
+    const token = match![1];
+    return token;
+}
+
+//
 // Returns true if a collection exists.
 //
 async function collectionExists(db: mongodb.Db, collectionName: string): Promise<boolean> {
@@ -197,9 +206,25 @@ describe("authentic", () => {
         expect(refreshResponse.data.token).not.toEqual(token);
     });
 
+    it("can request password reset", async () => {
+
+        const confirmationToken = await registerNewUser();
+        await confirmNewUser(confirmationToken);
+
+        const output = await captureOutput(async () => {
+            const requestPwResetResponse = await axios.post(`${baseUrl}/api/auth/request-password-reset`, {
+                "email": "someone@something.com",
+            });
+        
+            expect(requestPwResetResponse.status).toBe(200);
+        });
+
+        const token = extractPasswordResetToken(output);
+        validateGuid(token);
+    });
+
     //todo:
     //
-    // can request password reset
     // can reset password
     // can update password
     // can get users

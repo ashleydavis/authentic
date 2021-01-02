@@ -411,8 +411,6 @@ export async function main(): Promise<IMicroservice> {
 
         const email = verifyBodyParam("email", req).toLowerCase().trim();
 
-        res.sendStatus(200); // Always respond straight away.
-
         const user = await usersCollection.findOne({ email: email })
         if (!user) {
             throw new Error('Failed to find user: ' + email);
@@ -439,6 +437,8 @@ export async function main(): Promise<IMicroservice> {
         );
 
         await sendResetPasswordMail(user.email, token, req.headers.host!);
+
+        res.sendStatus(200);
     });
 
     /* 
