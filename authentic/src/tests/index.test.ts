@@ -139,10 +139,28 @@ describe("authentic", () => {
         await confirmNewUser(confirmationToken);
     });
 
+    it('can authenticate user', async () => {
+
+        const confirmationToken = await registerNewUser();
+        await confirmNewUser(confirmationToken);
+
+        const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
+            "email": "someone@something.com",
+            "password": "fooey"
+        });
+
+        expect(authenticateResponse.status).toBe(200);
+        expect(authenticateResponse.data.ok).toBe(true);
+        expect(authenticateResponse.data.id).toBeDefined();
+        expect(authenticateResponse.data.token).toBeDefined();
+});
+
     //todo:
     //
     // must provide valid email
     // must provide valid password
     // can't register user more than once
+    // user is not authenticated when email isn't recognised
+    // user is not authenticated when password is wrong
 });
 
