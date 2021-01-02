@@ -170,17 +170,41 @@ describe("authentic", () => {
             "token": token,
         });
 
-        expect(authenticateResponse.status).toBe(200);
-        expect(authenticateResponse.data.ok).toBe(true);
-        expect(authenticateResponse.data.id).toBeDefined();
+        expect(validateResponse.status).toBe(200);
+        expect(validateResponse.data.ok).toBe(true);
+        expect(validateResponse.data.id).toBeDefined();
+    });
+
+    it('can refresh token', async () => {
+
+        const confirmationToken = await registerNewUser();
+        await confirmNewUser(confirmationToken);
+
+        const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
+            "email": "someone@something.com",
+            "password": "fooey"
+        });
+
+        const token = authenticateResponse.data.token;
+        const refreshResponse = await axios.post(`${baseUrl}/api/auth/refresh`, {
+            "token": token,
+        });
+
+        expect(refreshResponse.status).toBe(200);
+        expect(refreshResponse.data.ok).toBe(true);
+        expect(refreshResponse.data.id).toBeDefined();
+        expect(refreshResponse.data.token).toBeDefined();
+        expect(refreshResponse.data.token).not.toEqual(token);
     });
 
     //todo:
     //
+    // password reset
     // must provide valid email
     // must provide valid password
     // can't register user more than once
     // user is not authenticated when email isn't recognised
     // user is not authenticated when password is wrong
+    // invalid token is not validated
 });
 
