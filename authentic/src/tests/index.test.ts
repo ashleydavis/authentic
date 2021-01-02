@@ -1,21 +1,18 @@
 import { IMicroservice, main } from "../";
 import axios from "axios";
 import * as mongodb from "mongodb";
+import { fdatasync } from "fs";
 
 const baseUrl = "http://localhost:3000";
 
 //
-// Registers a new user and returns their confirmation token.
+// Invoke a function can capture its standard output.
 //
-async function registerNewUser() {
+async function captureOutput(fn: () => Promise<void>): Promise<string> {
+
     const mockConsole = jest.spyOn(global.console, 'log');
 
-    const registerResponse = await axios.post(`${baseUrl}/api/auth/register`, {
-        "email": "someone@something.com",
-        "password": "fooey"
-    });
-
-    expect(registerResponse.status).toBe(200);
+    await fn();
 
     let output = "";
 
@@ -25,14 +22,36 @@ async function registerNewUser() {
         }
     }
 
-    const match = /signup-confirmed\/(.*)\?/g.exec(output);
-
-    const confirmationToken = match![1];
-    console.log(confirmationToken);
-
-    mockConsole.mockRestore(); //todo: do I need this?
+    mockConsole.mockRestore();
     mockConsole.mockClear();
 
+    return output;
+}
+
+//
+// Registers a new user and returns their confirmation token.
+//
+async function registerNewUser() {
+
+    const output = await captureOutput(async () => {
+        const registerResponse = await axios.post(`${baseUrl}/api/auth/register`, {
+            "email": "someone@something.com",
+            "password": "fooey"
+        });
+    
+        expect(registerResponse.status).toBe(200);
+    });
+
+
+    return extractConfirmationToken(output);
+}
+
+//
+// Extracts the confirmation token from debug output.
+//
+function extractConfirmationToken(output: string) {
+    const match = /signup-confirmed\/(.*)\?/g.exec(output);
+    const confirmationToken = match![1];
     return confirmationToken;
 }
 
@@ -46,6 +65,14 @@ async function confirmNewUser(confirmationToken: string) {
     });
 
     expect(confirmResponse.status).toBe(200);
+}
+
+//
+// Validates that the input is a guid.
+//
+function validateGuid(guid: string): void {
+    const pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    expect(pattern.test(guid)).toBe(true);
 }
 
 //
@@ -74,25 +101,41 @@ describe("authentic", () => {
         microservice = await main();
     });
 
+    beforeEach(async ()  => {
+        await dropCollection(microservice.db, "users");
+    });
+
     afterAll(async () => {
         await microservice.stop();
     });
     
     it("can register new user", async () => {
 
-        await dropCollection(microservice.db, "users");
-
         const confirmationToken = await registerNewUser();
-        expect(confirmationToken).toBeDefined();
+        validateGuid(confirmationToken);
     });
 
     
+    it("can resend confirmation", async () => {
+
+        await registerNewUser();
+
+        const output = await captureOutput(async () => {
+            const registerResponse = await axios.post(`${baseUrl}/api/auth/resend-confirmation-email`, {
+                "email": "someone@something.com",
+                "password": "fooey"
+            });
+        
+            expect(registerResponse.status).toBe(200);
+        });
+
+        const confirmationToken = extractConfirmationToken(output);
+        validateGuid(confirmationToken);
+    });
+
     it("can confirm new user", async () => {
 
-        await dropCollection(microservice.db, "users");
-
         const confirmationToken = await registerNewUser();
-
         await confirmNewUser(confirmationToken);
     });
 
