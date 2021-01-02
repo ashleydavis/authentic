@@ -31,12 +31,12 @@ async function captureOutput(fn: () => Promise<void>): Promise<string> {
 //
 // Registers a new user and returns their confirmation token.
 //
-async function registerNewUser() {
+async function registerNewUser(email: string, password: string) {
 
     const output = await captureOutput(async () => {
         const registerResponse = await axios.post(`${baseUrl}/api/auth/register`, {
-            "email": "someone@something.com",
-            "password": "fooey"
+            email: email,
+            password: password,
         });
     
         expect(registerResponse.status).toBe(200);
@@ -58,10 +58,10 @@ function extractConfirmationToken(output: string) {
 //
 // Confirms a newly registered user.
 //
-async function confirmNewUser(confirmationToken: string) {
+async function confirmNewUser(email: string, confirmationToken: string) {
     const confirmResponse = await axios.post(`${baseUrl}/api/auth/confirm`, {
-        "email": "someone@something.com",
-        "token": confirmationToken
+        email: email,
+        token: confirmationToken
     });
 
     expect(confirmResponse.status).toBe(200);
@@ -87,10 +87,10 @@ function extractPasswordResetToken(output: string) {
 //
 // Requests a password reset.
 //
-async function requestPasswordReset() {
+async function requestPasswordReset(email: string) {
     const output = await captureOutput(async () => {
         const requestPwResetResponse = await axios.post(`${baseUrl}/api/auth/request-password-reset`, {
-            "email": "someone@something.com",
+            email: email,
         });
 
         expect(requestPwResetResponse.status).toBe(200);
@@ -133,17 +133,20 @@ describe("authentic", () => {
     afterAll(async () => {
         await microservice.stop();
     });
+
+    const defaultEmail = "someone@something.com";
+    const defaultPw = "fooey";
     
     it("can register new user", async () => {
 
-        const confirmationToken = await registerNewUser();
+        const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
         validateGuid(confirmationToken);
     });
 
     
     it("can resend confirmation", async () => {
 
-        await registerNewUser();
+        await registerNewUser(defaultEmail, defaultPw);
 
         const output = await captureOutput(async () => {
             const registerResponse = await axios.post(`${baseUrl}/api/auth/resend-confirmation-email`, {
@@ -160,14 +163,14 @@ describe("authentic", () => {
 
     it("can confirm new user", async () => {
 
-        const confirmationToken = await registerNewUser();
-        await confirmNewUser(confirmationToken);
+        const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
+        await confirmNewUser(defaultEmail, confirmationToken);
     });
 
     it('can authenticate user', async () => {
 
-        const confirmationToken = await registerNewUser();
-        await confirmNewUser(confirmationToken);
+        const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
+        await confirmNewUser(defaultEmail, confirmationToken);
 
         const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
             "email": "someone@something.com",
@@ -182,8 +185,8 @@ describe("authentic", () => {
 
     it('can validate token', async () => {
 
-        const confirmationToken = await registerNewUser();
-        await confirmNewUser(confirmationToken);
+        const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
+        await confirmNewUser(defaultEmail, confirmationToken);
 
         const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
             "email": "someone@something.com",
@@ -202,8 +205,8 @@ describe("authentic", () => {
 
     it('can refresh token', async () => {
 
-        const confirmationToken = await registerNewUser();
-        await confirmNewUser(confirmationToken);
+        const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
+        await confirmNewUser(defaultEmail, confirmationToken);
 
         const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
             "email": "someone@something.com",
@@ -224,19 +227,19 @@ describe("authentic", () => {
 
     it("can request password reset", async () => {
 
-        const confirmationToken = await registerNewUser();
-        await confirmNewUser(confirmationToken);
+        const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
+        await confirmNewUser(defaultEmail, confirmationToken);
 
-        const token = await requestPasswordReset();
+        const token = await requestPasswordReset(defaultEmail);
         validateGuid(token);
     });
 
     it("can reset password", async () => {
 
-        const confirmationToken = await registerNewUser();
-        await confirmNewUser(confirmationToken);
+        const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
+        await confirmNewUser(defaultEmail, confirmationToken);
 
-        const token = await requestPasswordReset();
+        const token = await requestPasswordReset(defaultEmail);
 
         const resetPwResponse = await axios.post(`${baseUrl}/api/auth/reset-password`, {
             email: "someone@something.com",
@@ -256,8 +259,8 @@ describe("authentic", () => {
 
     it("can update password", async () => {
 
-        const confirmationToken = await registerNewUser();
-        await confirmNewUser(confirmationToken);
+        const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
+        await confirmNewUser(defaultEmail, confirmationToken);
 
         const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
             "email": "someone@something.com",
