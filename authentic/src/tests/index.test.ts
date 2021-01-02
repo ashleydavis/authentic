@@ -85,6 +85,22 @@ function extractPasswordResetToken(output: string) {
 }
 
 //
+// Requests a password reset.
+//
+async function requestPasswordReset() {
+    const output = await captureOutput(async () => {
+        const requestPwResetResponse = await axios.post(`${baseUrl}/api/auth/request-password-reset`, {
+            "email": "someone@something.com",
+        });
+
+        expect(requestPwResetResponse.status).toBe(200);
+    });
+
+    const token = extractPasswordResetToken(output);
+    return token;
+}
+
+//
 // Returns true if a collection exists.
 //
 async function collectionExists(db: mongodb.Db, collectionName: string): Promise<boolean> {
@@ -211,16 +227,31 @@ describe("authentic", () => {
         const confirmationToken = await registerNewUser();
         await confirmNewUser(confirmationToken);
 
-        const output = await captureOutput(async () => {
-            const requestPwResetResponse = await axios.post(`${baseUrl}/api/auth/request-password-reset`, {
-                "email": "someone@something.com",
-            });
-        
-            expect(requestPwResetResponse.status).toBe(200);
+        const token = await requestPasswordReset();
+        validateGuid(token);
+    });
+
+    it("can reset password", async () => {
+
+        const confirmationToken = await registerNewUser();
+        await confirmNewUser(confirmationToken);
+
+        const token = await requestPasswordReset();
+
+        const resetPwResponse = await axios.post(`${baseUrl}/api/auth/reset-password`, {
+            email: "someone@something.com",
+            password: "blah",
+            token: token,
+        });
+    
+        expect(resetPwResponse.status).toBe(200);
+
+        const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
+            "email": "someone@something.com",
+            "password": "blah"
         });
 
-        const token = extractPasswordResetToken(output);
-        validateGuid(token);
+        expect(authenticateResponse.status).toBe(200);
     });
 
     //todo:
@@ -234,5 +265,5 @@ describe("authentic", () => {
     // user is not authenticated when email isn't recognised
     // user is not authenticated when password is wrong
     // invalid token is not validated
+    // check that no unecessary fields are leaked out of the api
 });
-
