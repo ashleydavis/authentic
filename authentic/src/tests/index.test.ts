@@ -121,9 +121,12 @@ async function dropCollection(db: mongodb.Db, collectionName: string): Promise<v
 describe("authentic", () => {
 
     let microservice: IMicroservice;
+    let usersCollection: mongodb.Collection<any>;
 
     beforeAll(async () => {
         microservice = await main();
+
+        usersCollection = microservice.db.collection("users");
     });
 
     beforeEach(async ()  => {
@@ -184,6 +187,17 @@ describe("authentic", () => {
 
         const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
         validateGuid(confirmationToken);
+    });
+
+    it("password is stored as a hash instead of as plain text", async () => {
+
+        await registerNewUser(defaultEmail, defaultPw);
+
+        const users = await usersCollection.find().toArray();
+        expect(users.length).toBe(1);
+
+        const user = users[0];
+        expect(user.hash).not.toEqual(defaultPw);
     });
 
     it("can't register user more than once", async () => {
