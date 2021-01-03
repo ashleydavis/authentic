@@ -237,6 +237,37 @@ describe("authentic", () => {
         expect(authenticateResponse.data.token).toBeDefined();
     });
 
+    it("doesn't authenticate user when email isn't recognised", async () => {
+
+        const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
+            email: "someone@something.com",
+            password: "fooey"
+        });
+
+        expect(authenticateResponse.status).toBe(200);
+        expect(authenticateResponse.data.ok).toBe(false);
+        expect(authenticateResponse.data.errorMessage).toBeDefined();
+        expect(authenticateResponse.data.id).toBeUndefined();
+        expect(authenticateResponse.data.token).toBeUndefined();
+    });
+
+    it("doesn't authenticate user when email is wrong", async () => {
+
+        const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
+        await confirmNewUser(defaultEmail, confirmationToken);
+
+        const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
+            email: "someone@something.com",
+            password: "fooster"
+        });
+
+        expect(authenticateResponse.status).toBe(200);
+        expect(authenticateResponse.data.ok).toBe(false);
+        expect(authenticateResponse.data.errorMessage).toBeDefined();
+        expect(authenticateResponse.data.id).toBeUndefined();
+        expect(authenticateResponse.data.token).toBeUndefined();
+    });
+
     it('can validate token', async () => {
 
         const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
@@ -255,6 +286,18 @@ describe("authentic", () => {
         expect(validateResponse.status).toBe(200);
         expect(validateResponse.data.ok).toBe(true);
         expect(validateResponse.data.id).toBeDefined();
+    });
+
+    it("invalid token doesn't validate", async () => {
+
+        checkException(
+            () => axios.post(`${baseUrl}/api/auth/validate`, {
+                "token": "1234",
+            }),
+            err => {
+                expect(err.response.status).toBe(500);
+            }
+        )
     });
 
     it('can refresh token', async () => {
