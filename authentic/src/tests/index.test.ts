@@ -29,6 +29,26 @@ async function captureOutput(fn: () => Promise<void>): Promise<string> {
 }
 
 //
+// Checks that the object contains only whitelisted fields.
+//
+function checkWhitelist(data: any, allowedFields: string[]): void {
+    const fields = Object.keys(data);
+    for (const field of fields) {
+        if (allowedFields.indexOf(field) < 0) {
+            throw new Error(`Field ${field} is not in the list of allowed fields, expected one of ${allowedFields.join(", ")}`);
+        }
+    }
+}
+
+//
+// Check the register function matches the whilte list.
+//
+function checkRegisterWhitelist(data: any): void {
+    const fields = Object.keys(data);
+    checkWhitelist(data, [ "ok", "errorMessage" ]);
+}
+
+//
 // Registers a new user and returns their confirmation token.
 //
 async function registerNewUser(email: string, password: string) {
@@ -40,6 +60,7 @@ async function registerNewUser(email: string, password: string) {
         });
     
         expect(registerResponse.status).toBe(200);
+        checkRegisterWhitelist(registerResponse.data);
     });
 
 
@@ -56,6 +77,14 @@ function extractConfirmationToken(output: string) {
 }
 
 //
+// Checks that the confirm response matches the field whitelist.
+//
+function checkConfirmWhitelist(data: any): void {
+    const fields = Object.keys(data);
+    expect(fields).toEqual([ "ok" ]);
+}
+
+//
 // Confirms a newly registered user.
 //
 async function confirmNewUser(email: string, confirmationToken: string) {
@@ -65,6 +94,7 @@ async function confirmNewUser(email: string, confirmationToken: string) {
     });
 
     expect(confirmResponse.status).toBe(200);
+    checkConfirmWhitelist(confirmResponse.data);
 }
 
 //
@@ -210,8 +240,9 @@ describe("authentic", () => {
 
         expect(duplicateRegisterResponse.status).toBe(200);
         expect(duplicateRegisterResponse.data.ok).toBe(false);
+        checkRegisterWhitelist(duplicateRegisterResponse.data);
     });
-    
+
     it("can resend confirmation", async () => {
 
         await registerNewUser(defaultEmail, defaultPw);
