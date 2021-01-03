@@ -122,6 +122,7 @@ async function requestPasswordReset(email: string) {
         });
 
         expect(requestPwResetResponse.status).toBe(200);
+        expect(requestPwResetResponse.data).toBe("OK");
     });
 
     const token = extractPasswordResetToken(output);
