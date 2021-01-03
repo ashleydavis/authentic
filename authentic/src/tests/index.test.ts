@@ -1,5 +1,5 @@
 import { IMicroservice, main } from "../";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import * as mongodb from "mongodb";
 import { fdatasync } from "fs";
 
@@ -136,7 +136,50 @@ describe("authentic", () => {
 
     const defaultEmail = "someone@something.com";
     const defaultPw = "fooey";
+
+    //
+    // Checks that a function throws an exception.
+    //
+    async function checkException(fn: () => Promise<void>, checkFn: (err: any) => void): Promise<void> {
+        let thrownError;
+
+        try {
+            await fn();
+        }
+        catch (err) {
+            thrownError = err;
+        }
+
+        expect(thrownError).toBeDefined();
+        checkFn(thrownError);
+    }
+
+    it("can't register with no details", async () => {
+
+        await checkException(
+            () => axios.post(`${baseUrl}/api/auth/register`, {}),
+            err => expect(err.response.status).toBe(500)
+        );
+    });
+
+    it("registration must include password", async () => {
+        await checkException(
+            () => axios.post(`${baseUrl}/api/auth/register`, {
+                email: defaultEmail,
+            }),
+            err => expect(err.response.status).toBe(500)
+        );
+    });
     
+    it("registration must include email", async () => {
+        await checkException(
+            () => axios.post(`${baseUrl}/api/auth/register`, {
+                password: defaultPw,
+            }),
+            err => expect(err.response.status).toBe(500)
+        );
+    });
+
     it("can register new user", async () => {
 
         const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
