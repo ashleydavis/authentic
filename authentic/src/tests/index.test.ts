@@ -35,7 +35,7 @@ function checkWhitelist(data: any, allowedFields: string[]): void {
     const fields = Object.keys(data);
     for (const field of fields) {
         if (allowedFields.indexOf(field) < 0) {
-            throw new Error(`Field ${field} is not in the list of allowed fields, expected one of ${allowedFields.join(", ")}`);
+            throw new Error(`Field ${field} is not in the list of allowed fields, expected one of ${allowedFields.join(", ")}\r\nObject: ${data}`);
         }
     }
 }
@@ -44,7 +44,6 @@ function checkWhitelist(data: any, allowedFields: string[]): void {
 // Check the register function matches the whilte list.
 //
 function checkRegisterWhitelist(data: any): void {
-    const fields = Object.keys(data);
     checkWhitelist(data, [ "ok", "errorMessage" ]);
 }
 
@@ -80,8 +79,7 @@ function extractConfirmationToken(output: string) {
 // Checks that the confirm response matches the field whitelist.
 //
 function checkConfirmWhitelist(data: any): void {
-    const fields = Object.keys(data);
-    expect(fields).toEqual([ "ok" ]);
+    checkWhitelist(data, [ "ok" ])
 }
 
 //
