@@ -186,6 +186,17 @@ describe("authentic", () => {
         validateGuid(confirmationToken);
     });
 
+    it("can't register user more than once", async () => {
+        await registerNewUser(defaultEmail, defaultPw);
+
+        const duplicateRegisterResponse = await axios.post(`${baseUrl}/api/auth/register`, {
+                email: defaultEmail,
+                password: defaultPw,
+        });
+
+        expect(duplicateRegisterResponse.status).toBe(200);
+        expect(duplicateRegisterResponse.data.ok).toBe(false);
+    });
     
     it("can resend confirmation", async () => {
 
