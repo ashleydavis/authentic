@@ -38,6 +38,7 @@ services:
       - MAILGUN_API_KEY=1234
       - DOMAIN_NAME=authtemplate.com
       - FROM_EMAIL=me@authtemplate.com
+      - JWT_SECRET=1234
     restart: "no"
 
   example-client:
