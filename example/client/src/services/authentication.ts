@@ -160,7 +160,7 @@ export class Authentication implements IAuthentication {
     // Asynchronously check if the user is currently signed in.
     //
     async checkSignedIn(): Promise<boolean> {
-        const token = undefined; //TODO: (await storage.get({ key: "t" })).value || undefined; 
+        const token = localStorage.getItem("t");
         if (token) {
             // Validate token.
             const response = await axios.post(BASE_URL + "/api/auth/validate", {
@@ -189,10 +189,10 @@ export class Authentication implements IAuthentication {
     //
     private async updateSignedinState(authToken: string | undefined, id: string | undefined): Promise<void> {
         if (authToken === undefined) {
-            //TODO: await storage.remove({ key: "t" });
+            localStorage.removeItem("t");
         }
         else {
-            //TODO: await storage.set({ key: "t", value: authToken });
+            localStorage.setItem("t", authToken);
         }
         
         this.authToken = authToken;
