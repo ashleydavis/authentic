@@ -42,11 +42,11 @@ verbose("Using DB " + DBNAME);
 //
 const templateFolderPath = path.join(__dirname, "../templates");
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET as string;
 if (!JWT_SECRET) {
     throw new Error("Expected environment variable JWT_SECRET, please set this environment variable to a random string of characters known only to you.");
 }
-const JWT_ALGO = process.env.JWT_ALGO || "HS256";
+const JWT_ALGO = process.env.JWT_ALGO as jwt.Algorithm || "HS256";
 const JWT_VERSION = process.env.JWT_VERSION || 1;
 
 //
@@ -61,7 +61,7 @@ interface IJwtPayload {
     // 
     // JWT version number.
     //
-    v: number;
+    v: any;
 
     //
     // Expiry date for the token.
