@@ -23,6 +23,10 @@ const PORT = process.env.PORT && parseInt(process.env.PORT) || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
 const DBHOST = process.env.DBHOST || "mongodb://localhost:27017";
 const DBNAME = process.env.DBNAME || "auth-test";
+const CONF_EMAIL_SUBJECT = process.env.CONF_EMAIL_SUBJECT || "Account confirmation";
+const CONF_EMAIL_TEMPLATE = process.env.CONF_EMAIL_TEMPLATE;
+const PWRESET_EMAIL_SUBJECT = process.env.PWRESET_EMAIL_SUBJECT || "Password Reset";
+const PWRESET_EMAIL_TEMPLATE = process.env.PWRESET_EMAIL_TEMPLATE;
 
 function verbose(msg: string): void {
     if (isVerbose) {
@@ -608,11 +612,17 @@ function validatePassword(user: any, password: string): Promise<boolean> {
 async function sendSignupConfirmationEmail(email: string, token: string, host: string): Promise<void> {
 
     verbose("Sending confirmation email to " + email);
-    
-    const emailSubject = "Account confirmation"; //TODO: From env var.
-    const templateFilePath = path.join(templateFolderPath, "confirm-account-email.template");
-    verbose("Loading email template from " + templateFilePath);
-    const emailTemplate = fs.readFileSync(templateFilePath, "utf8");
+
+    let emailTemplate: string;
+
+    if (CONF_EMAIL_TEMPLATE) {
+        emailTemplate = CONF_EMAIL_TEMPLATE;
+    }
+    else {
+        const templateFilePath = path.join(templateFolderPath, "confirm-account-email.template");
+        verbose("Loading email template from " + templateFilePath);
+        emailTemplate = fs.readFileSync(templateFilePath, "utf8");
+    }
 
     const emailText = mustache.render(
         emailTemplate,
@@ -625,7 +635,7 @@ async function sendSignupConfirmationEmail(email: string, token: string, host: s
     
     await sendEmail({
         to: email,
-        subject: emailSubject,
+        subject: CONF_EMAIL_SUBJECT,
         text: emailText,
     });
 
@@ -637,11 +647,16 @@ async function sendSignupConfirmationEmail(email: string, token: string, host: s
 //
 async function sendResetPasswordMail(email: string, token: string, host: string) {
 
-    const emailSubject = "Password Reset"; //todo: env var
+    let emailTemplate: string;
 
-    const templateFilePath = path.join(templateFolderPath, "password-reset-email.template");
-    verbose("Loading email template from " + templateFilePath);		
-    const emailTemplate = fs.readFileSync(templateFilePath, "utf8");
+    if (PWRESET_EMAIL_TEMPLATE) {
+        emailTemplate = PWRESET_EMAIL_TEMPLATE;
+    }
+    else {
+        const templateFilePath = path.join(templateFolderPath, "password-reset-email.template");
+        verbose("Loading email template from " + templateFilePath);		
+        emailTemplate = fs.readFileSync(templateFilePath, "utf8");
+    }
 
     const emailText = mustache.render(
         emailTemplate,
@@ -654,7 +669,7 @@ async function sendResetPasswordMail(email: string, token: string, host: string)
 
     return sendEmail({
         to: email,
-        subject: emailSubject,
+        subject: PWRESET_EMAIL_SUBJECT,
         text: emailText,
     });
 };
