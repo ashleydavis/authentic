@@ -18,6 +18,23 @@ services:
      - "5003:27017"
     restart: always
 
+  mailer:
+    image: mailer
+    build: 
+      context: ./mock-mailer
+      dockerfile: Dockerfile-dev
+    container_name: mailer
+    volumes:
+      - ./tmp/mock-mailer/npm-cache:/root/.npm:z
+      - ./mock-mailer/src:/usr/src/app/src:z
+    ports:
+     - "5004:80"
+    environment:
+      - PORT=80
+      - NODE_ENV=development
+      - JWT_SECRET=1234
+    restart: "no"
+
   authentic:
     image: authentic
     build: 
@@ -35,9 +52,6 @@ services:
       - DBHOST=mongodb://db:27017
       - DBNAME=auth
       - NODE_ENV=development
-      - MAILGUN_API_KEY=1234
-      - DOMAIN_NAME=authtemplate.com
-      - FROM_EMAIL=me@authtemplate.com
       - JWT_SECRET=1234
     restart: "no"
 

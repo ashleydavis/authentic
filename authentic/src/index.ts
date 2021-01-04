@@ -9,10 +9,10 @@ import { Strategy as JwtStrategy, ExtractJwt  } from 'passport-jwt';
 import * as uuid from 'uuid';
 import * as fs from "fs";
 import * as mustache from 'mustache';
-import { sendEmail } from './mailer';
 import * as jwt from "jsonwebtoken";
 import * as moment from "moment";
 import { Server } from 'http';
+import axios from 'axios';
 const morganBody = require('morgan-body');
 
 const isVerbose = process.env.VERBOSE === "true";
@@ -27,6 +27,7 @@ const CONF_EMAIL_SUBJECT = process.env.CONF_EMAIL_SUBJECT || "Account confirmati
 const CONF_EMAIL_TEMPLATE = process.env.CONF_EMAIL_TEMPLATE;
 const PWRESET_EMAIL_SUBJECT = process.env.PWRESET_EMAIL_SUBJECT || "Password Reset";
 const PWRESET_EMAIL_TEMPLATE = process.env.PWRESET_EMAIL_TEMPLATE;
+const MAILER_HOST = process.env.MAILER_HOST || "http://mailer";
 
 function verbose(msg: string): void {
     if (isVerbose) {
@@ -632,13 +633,13 @@ async function sendSignupConfirmationEmail(email: string, token: string, host: s
 	        EMAIL: encodeURIComponent(email),
         }
     );
-    
-    await sendEmail({
+
+    await axios.post(`${MAILER_HOST}/api/send`, {
         to: email,
         subject: CONF_EMAIL_SUBJECT,
         text: emailText,
     });
-
+    
     verbose("Sent confirmation email to " + email);
 };    
 
@@ -667,7 +668,7 @@ async function sendResetPasswordMail(email: string, token: string, host: string)
         }
     );
 
-    return sendEmail({
+    await axios.post(`${MAILER_HOST}/api/send`, {
         to: email,
         subject: PWRESET_EMAIL_SUBJECT,
         text: emailText,
