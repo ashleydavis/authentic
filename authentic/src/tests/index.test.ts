@@ -437,6 +437,7 @@ describe("authentic", () => {
         });
 
         expect(updatePwdResponse.status).toBe(200);
+        expect(updatePwdResponse.data).toBe("OK");
 
         const authenticateResponse2 = await axios.post(`${baseUrl}/api/auth/authenticate`, {
             "email": "someone@something.com",
