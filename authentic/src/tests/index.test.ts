@@ -380,6 +380,7 @@ describe("authentic", () => {
         expect(refreshResponse.data.id).toBeDefined();
         expect(refreshResponse.data.token).toBeDefined();
         expect(refreshResponse.data.token).not.toEqual(token);
+        checkWhitelist(refreshResponse.data, [ "ok", "id", "token" ])
     });
 
     it("can request password reset", async () => {
