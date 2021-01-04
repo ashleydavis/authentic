@@ -30,7 +30,6 @@ function verbose(msg: string): void {
     }
 }
 
-
 verbose("Using DBHOST " + DBHOST);
 verbose("Using DB " + DBNAME);
 
@@ -39,7 +38,10 @@ verbose("Using DB " + DBNAME);
 //
 const templateFolderPath = path.join(__dirname, "../templates");
 
-const JWT_SECRET = "1234"; //TODO: env var.
+const JWT_SECRET = process.env.SECRET;
+if (!JWT_SECRET) {
+    throw new Error("Expected environment variable SECRET, please set this environment variable to a random string of characters known only to you.");
+}
 const JWT_ALGO = "HS256";
 const JWT_VERSION = 1; //TODO: env var.
 
