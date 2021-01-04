@@ -533,12 +533,14 @@ export async function main(): Promise<IMicroservice> {
         res.sendStatus(200);
     });    
 
+    const userFieldsWhitelist = { _id: 1, email: 1, confirmed: 1, signupDate: 1 };
+
     //
     // Gets a particular user.
     //
     get(app, "/api/user", async (req, res) => {
         const userId = new mongodb.ObjectID(verifyQueryParam("id", req));
-        const users = await usersCollection.findOne({ _id: userId }, { projection: { hash: 0, } });
+        const users = await usersCollection.findOne({ _id: userId }, { projection: userFieldsWhitelist });
         res.json(users);
     });
 
@@ -546,7 +548,7 @@ export async function main(): Promise<IMicroservice> {
     // Gets the user list.
     //
     get(app, "/api/users", async (req, res) => {
-        const users = await usersCollection.find({}, { projection: { hash: 0, } }).toArray();
+        const users = await usersCollection.find({}, { projection: userFieldsWhitelist }).toArray();
         res.json(users);
     });
     

@@ -448,6 +448,13 @@ describe("authentic", () => {
         checkAuthenticateResponse(authenticateResponse.data);
     });
 
+    //
+    // Checks the response from the users or user API.
+    //
+    function checkUserResponse(data: any) {
+        checkWhitelist(data, [ "_id", "email", "confirmed", "signupDate" ])
+    }
+
     it("can get users", async () => {
 
         await registerNewUser("me@you.com", "1234");
@@ -460,9 +467,11 @@ describe("authentic", () => {
 
         const user1 = usersResponse.data[0];
         expect(user1.email).toEqual("me@you.com");
+        checkUserResponse(user1);
 
         const user2 = usersResponse.data[1];
         expect(user2.email).toEqual("you@me.com");
+        checkUserResponse(user2);
     });
 
     it("users api doesn't reveal password hash", async () => {
@@ -491,6 +500,7 @@ describe("authentic", () => {
         
         const user = userResponse.data;
         expect(user.email).toEqual("me@you.com");
+        checkUserResponse(user);
     });
 
     it("user api doesn't reveal password hash", async () => {
