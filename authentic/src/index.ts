@@ -312,7 +312,7 @@ export async function main(): Promise<IMicroservice> {
         if (!user) {
             res.json({ 
                 ok: false,
-                errorMessage: "No user with those details is not awaiting confirmation.",
+                errorMessage: "No user with those details is awaiting confirmation.",
             });
             return;
         }
