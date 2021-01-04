@@ -406,6 +406,7 @@ describe("authentic", () => {
         });
     
         expect(resetPwResponse.status).toBe(200);
+        checkWhitelist(resetPwResponse.data, [ "ok" ]);
 
         const authenticateResponse = await axios.post(`${baseUrl}/api/auth/authenticate`, {
             "email": "someone@something.com",
