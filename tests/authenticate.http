@@ -1,59 +1,82 @@
+#
+# Example HTTP requests against the Authentic microservice.
+#
+# To run, first start the example application
+#
+#       cd authentic
+#       docker-compose up --build
+#
+# Then open this file in VS Code, install REST Client and
+# click "Send Request" for each of these HTTP requests in order.
+#
 
-POST http://localhost:5002/api/auth/register
+@baseUrl = http://localhost:5002
+
+@email = "someone@something.com"
+@password = "fooey"
+
+# @name register
+POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
-    "email": "someone@something.com",
-    "password": "fooey"
+    "email": {{email}},
+    "password": {{password}}
 }
 
 ###
 
-# Copy token from console output of previous request.
+# Check the standard output from the previous request and replace this string 
+# with the confirmation token printed there (a GUID).
+#
+@confirmmationToken = "<confirmation-token>"
 
-POST http://localhost:5002/api/auth/confirm
+# @name confirm
+POST {{baseUrl}}/api/auth/confirm
 Content-Type: application/json
 
 {
-    "email": "someone@something.com",
-    "token": "b9c8b158-9bc3-4fe8-9b35-c3c66878bebc"
+    "email": {{email}},
+    "token": {{confirmmationToken}}
 }
 
 ###
 
-POST http://localhost:5002/api/auth/authenticate
+# @name authenticate
+POST {{baseUrl}}/api/auth/authenticate
 Content-Type: application/json
 
 {
-    "email": "someone@something.com",
-    "password": "fooey"
+    "email": {{email}},
+    "password": {{password}}
+}
+
+###
+
+@authToken = "{{authenticate.response.body.token}}"
+
+# @name validate
+POST {{baseUrl}}/api/auth/validate
+Content-Type: application/json
+
+{
+    "token": {{authToken}}
 }
 
 ###
 
 # Copy token from response of previous request.
 
-POST http://localhost:5002/api/auth/validate
+POST {{baseUrl}}/api/auth/refresh
 Content-Type: application/json
 
 {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZmVkMTRlNjAzNTAzNjAwNmM5NjZmY2YiLCJ2IjoxLCJleHBpcnkiOiIyMDIxLTAxLTMxVDAwOjAyOjA2LjAxMloiLCJpYXQiOjE2MDkzNzI5MjZ9.LY-CJ38kBcxJjK09lhmhmpQIL-5HHEnNULiSEQigsY4"
+    "token": {{authToken}}
 }
 
 ###
 
-# Copy token from response of previous request.
-
-POST http://localhost:5002/api/auth/refresh
-Content-Type: application/json
-
-{
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1ZmVkMTRlNjAzNTAzNjAwNmM5NjZmY2YiLCJ2IjoxLCJleHBpcnkiOiIyMDIxLTAxLTMxVDAwOjAyOjA2LjAxMloiLCJpYXQiOjE2MDkzNzI5MjZ9.LY-CJ38kBcxJjK09lhmhmpQIL-5HHEnNULiSEQigsY4"
-}
-
-###
-
-GET http://localhost:5002/api/users
+GET {{baseUrl}}/api/users
 Content-Type: application/json
 
 {
