@@ -258,6 +258,13 @@ describe("authentic", () => {
         await confirmNewUser(defaultEmail, confirmationToken);
     });
 
+    //
+    // Check the response from /authenticate against the whitelist.
+    //
+    function checkAuthenticateResponse(data: any) {
+        checkWhitelist(data, [ "ok", "id", "token", "errorMessage" ]);
+    }
+
     it('can authenticate user', async () => {
 
         const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
@@ -272,6 +279,7 @@ describe("authentic", () => {
         expect(authenticateResponse.data.ok).toBe(true);
         expect(authenticateResponse.data.id).toBeDefined();
         expect(authenticateResponse.data.token).toBeDefined();
+        checkAuthenticateResponse(authenticateResponse.data);
     });
 
     it("doesn't authenticate user when email isn't recognised", async () => {
@@ -286,6 +294,7 @@ describe("authentic", () => {
         expect(authenticateResponse.data.errorMessage).toBeDefined();
         expect(authenticateResponse.data.id).toBeUndefined();
         expect(authenticateResponse.data.token).toBeUndefined();
+        checkAuthenticateResponse(authenticateResponse.data);
     });
 
     it("doesn't authenticate user when email is wrong", async () => {
@@ -303,6 +312,7 @@ describe("authentic", () => {
         expect(authenticateResponse.data.errorMessage).toBeDefined();
         expect(authenticateResponse.data.id).toBeUndefined();
         expect(authenticateResponse.data.token).toBeUndefined();
+        checkAuthenticateResponse(authenticateResponse.data);
     });
 
     it('can validate token', async () => {
@@ -314,6 +324,8 @@ describe("authentic", () => {
             "email": "someone@something.com",
             "password": "fooey"
         });
+
+        checkAuthenticateResponse(authenticateResponse.data);
 
         const token = authenticateResponse.data.token;
         const validateResponse = await axios.post(`${baseUrl}/api/auth/validate`, {
@@ -346,6 +358,8 @@ describe("authentic", () => {
             "email": "someone@something.com",
             "password": "fooey"
         });
+
+        checkAuthenticateResponse(authenticateResponse.data);
 
         const token = authenticateResponse.data.token;
         const refreshResponse = await axios.post(`${baseUrl}/api/auth/refresh`, {
@@ -389,6 +403,7 @@ describe("authentic", () => {
         });
 
         expect(authenticateResponse.status).toBe(200);
+        checkAuthenticateResponse(authenticateResponse.data);
     });
 
     it("can update password", async () => {
@@ -400,6 +415,8 @@ describe("authentic", () => {
             "email": "someone@something.com",
             "password": "fooey"
         });
+
+        checkAuthenticateResponse(authenticateResponse.data);
 
         const token = authenticateResponse.data.token;
 
@@ -416,6 +433,7 @@ describe("authentic", () => {
         });
 
         expect(authenticateResponse2.status).toBe(200);
+        checkAuthenticateResponse(authenticateResponse.data);
     });
 
     it("can get users", async () => {
