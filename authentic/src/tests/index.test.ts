@@ -315,6 +315,13 @@ describe("authentic", () => {
         checkAuthenticateResponse(authenticateResponse.data);
     });
 
+    //
+    // Check the response from /validate against the whitelist.
+    //
+    function checkValidateResponse(data: any) {
+        checkWhitelist(data, [ "ok", "id", /*"token", "errorMessage"*/ ]);
+    }
+
     it('can validate token', async () => {
 
         const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
@@ -335,6 +342,7 @@ describe("authentic", () => {
         expect(validateResponse.status).toBe(200);
         expect(validateResponse.data.ok).toBe(true);
         expect(validateResponse.data.id).toBeDefined();
+        checkValidateResponse(validateResponse.data);
     });
 
     it("invalid token doesn't validate", async () => {
@@ -345,6 +353,7 @@ describe("authentic", () => {
             }),
             err => {
                 expect(err.response.status).toBe(500);
+                expect(err.response.data).toBe("Internal Server Error");
             }
         )
     });
