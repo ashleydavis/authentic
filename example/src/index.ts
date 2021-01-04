@@ -69,6 +69,8 @@ async function main() {
     forwardPost("/api/auth/authenticate", "authentic");
     forwardPost("/api/auth/request-password-reset", "authentic");
     forwardPost("/api/auth/reset-password", "authentic");
+    forwardPost("/api/auth/validate", "authentic");
+    forwardPost("/api/auth/refresh", "authentic");
 
     app.get("/api/test1", (req, res) => {
         res.json({
@@ -83,9 +85,6 @@ async function main() {
             console.warn("API request from unauthenticated user.");
             res.sendStatus(401);
         }
-
-        console.log("Request headers:"); //fio:
-        console.log(req.headers);
 
         if (!req.headers.authorization) {
             authFailed();
@@ -120,8 +119,6 @@ async function main() {
     // TODO: Add authenticated routes here.
 
     forwardPost("/api/auth/update-password", "authentic");
-    forwardPost("/api/auth/validate", "authentic");
-    forwardPost("/api/auth/refresh", "authentic");
     
     app.get("/api/test2", (req, res) => {
         res.json({
