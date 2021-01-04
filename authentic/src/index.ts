@@ -38,13 +38,16 @@ verbose("Using DB " + DBNAME);
 //
 const templateFolderPath = path.join(__dirname, "../templates");
 
-const JWT_SECRET = process.env.SECRET;
+const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-    throw new Error("Expected environment variable SECRET, please set this environment variable to a random string of characters known only to you.");
+    throw new Error("Expected environment variable JWT_SECRET, please set this environment variable to a random string of characters known only to you.");
 }
-const JWT_ALGO = "HS256";
-const JWT_VERSION = 1; //TODO: env var.
+const JWT_ALGO = process.env.JWT_ALGO || "HS256";
+const JWT_VERSION = process.env.JWT_VERSION || 1;
 
+//
+// Interface that defines the contents of a JWT.
+//
 interface IJwtPayload {
     //
     // User ID.
@@ -75,6 +78,7 @@ const app = express();
 
 //
 // Interface that represents the running microservice.
+// This is just used for testing.
 // 
 export interface IMicroservice {
 
@@ -725,7 +729,7 @@ function issueToken(user: any) {
 }
 
 //
-// Authenticate a user.
+// Authenticate a user with a JWT.
 // TODO: This isn't really used.
 //
 export function authenticateJWT(req: Express.Request, res: express.Response, done: (user: any | undefined) => void): void {
