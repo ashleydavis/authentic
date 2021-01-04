@@ -35,7 +35,7 @@ function checkWhitelist(data: any, allowedFields: string[]): void {
     const fields = Object.keys(data);
     for (const field of fields) {
         if (allowedFields.indexOf(field) < 0) {
-            throw new Error(`Field ${field} is not in the list of allowed fields, expected one of ${allowedFields.join(", ")}\r\nObject: ${data}`);
+            throw new Error(`Field ${field} is not in the list of allowed fields, expected one of ${allowedFields.join(", ")}\r\nObject: ${JSON.stringify(data, null, 4)}`);
         }
     }
 }
@@ -76,13 +76,6 @@ function extractConfirmationToken(output: string) {
 }
 
 //
-// Checks that the confirm response matches the field whitelist.
-//
-function checkConfirmWhitelist(data: any): void {
-    checkWhitelist(data, [ "ok" ])
-}
-
-//
 // Confirms a newly registered user.
 //
 async function confirmNewUser(email: string, confirmationToken: string) {
@@ -92,7 +85,7 @@ async function confirmNewUser(email: string, confirmationToken: string) {
     });
 
     expect(confirmResponse.status).toBe(200);
-    checkConfirmWhitelist(confirmResponse.data);
+    checkWhitelist(confirmResponse.data, [ "ok", "errorMessage" ]);
 }
 
 //
@@ -249,10 +242,10 @@ describe("authentic", () => {
         const output = await captureOutput(async () => {
             const registerResponse = await axios.post(`${baseUrl}/api/auth/resend-confirmation-email`, {
                 "email": "someone@something.com",
-                "password": "fooey"
             });
         
             expect(registerResponse.status).toBe(200);
+            expect(registerResponse.data).toBe("OK");
         });
 
         const confirmationToken = extractConfirmationToken(output);
