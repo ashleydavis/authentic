@@ -22,7 +22,7 @@ const inTesting = process.env.NODE_ENV === "testing";
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
 const DBHOST = process.env.DBHOST || "mongodb://localhost:27017";
-const DBNAME = process.env.DBNAME || "auth-test";
+const DBNAME = process.env.DBNAME || "auth";
 const CONF_EMAIL_SUBJECT = process.env.CONF_EMAIL_SUBJECT || "Account confirmation";
 const CONF_EMAIL_TEMPLATE = process.env.CONF_EMAIL_TEMPLATE;
 const PWRESET_EMAIL_SUBJECT = process.env.PWRESET_EMAIL_SUBJECT || "Password Reset";
@@ -227,7 +227,7 @@ export async function main(): Promise<IMicroservice> {
     });
 
     /*
-    HTTP POST /auth/register
+    HTTP POST /api/auth/register
     BODY
     {
         "email": "someone@something.com",
@@ -275,7 +275,14 @@ export async function main(): Promise<IMicroservice> {
         });
     });
 
-    post(app, "/api/auth/resend-confirmation-email", async (req, res) => {
+    /*
+    HTTP POST /api/auth/resend-confirmation-email
+    BODY
+    {
+        "email": "someone@something.com",
+    }
+    */
+   post(app, "/api/auth/resend-confirmation-email", async (req, res) => {
 
         const curDate = Date.now();
 
@@ -296,7 +303,7 @@ export async function main(): Promise<IMicroservice> {
     });
 
     /*
-    HTTP POST auth/confirm
+    HTTP POST /api/auth/confirm
     
     BODY
     {
@@ -343,7 +350,7 @@ export async function main(): Promise<IMicroservice> {
     });
 
     /*
-    HTTP POST /auth/authenticate
+    HTTP POST /api/auth/authenticate
     BODY
     {
         "email": "a@a.com",
@@ -355,7 +362,7 @@ export async function main(): Promise<IMicroservice> {
     });
 
     /*
-    HTTP POST auth/validate
+    HTTP POST /api/auth/validate
     BODY
     {
         "id": "<user-id>",
@@ -388,7 +395,7 @@ export async function main(): Promise<IMicroservice> {
     });
 
     /*
-    HTTP POST auth/refresh
+    HTTP POST /api/auth/refresh
     BODY
     {
         "token": "<auth-token>"
@@ -423,7 +430,7 @@ export async function main(): Promise<IMicroservice> {
     });
 
     /* 
-    HTTP POST /auth/request-password-reset
+    HTTP POST /api/auth/request-password-reset
     BODY
     {
         "email": "a@a.com",
@@ -464,7 +471,7 @@ export async function main(): Promise<IMicroservice> {
     });
 
     /* 
-    HTTP POST /auth/reset-password
+    HTTP POST /api/auth/reset-password
     BODY
     {
         "email": "a@a.com",
