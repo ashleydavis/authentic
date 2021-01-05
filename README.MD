@@ -426,7 +426,6 @@ Set necessary environment variables:
 export DBHOST=mongodb://localhost:6000
 export NODE_ENV=testing
 export JWT_SECRET=1234
-export MAILER_HOST=http://localhost:6001
 ```
 
 Or on Windows:
@@ -435,7 +434,6 @@ Or on Windows:
 set DBHOST=mongodb://localhost:6000
 set NODE_ENV=testing
 set JWT_SECRET=1234
-set MAILER_HOST=http://localhost:6001
 ```
 
 Now run tests:

@@ -641,11 +641,19 @@ async function sendSignupConfirmationEmail(email: string, token: string, host: s
         }
     );
 
-    await axios.post(`${MAILER_HOST}/api/send`, {
-        to: email,
-        subject: CONF_EMAIL_SUBJECT,
-        text: emailText,
-    });
+    if (inProduction) {
+        await axios.post(`${MAILER_HOST}/api/send`, {
+            to: email,
+            subject: CONF_EMAIL_SUBJECT,
+            text: emailText,
+        });
+    }
+    else {
+        console.log("Email:");
+        console.log("To: " + email);
+        console.log("Subject: " + CONF_EMAIL_SUBJECT);
+        console.log("Text: " + emailText);
+    }
     
     verbose("Sent confirmation email to " + email);
 };    
@@ -675,11 +683,19 @@ async function sendResetPasswordMail(email: string, token: string, host: string)
         }
     );
 
-    await axios.post(`${MAILER_HOST}/api/send`, {
-        to: email,
-        subject: PWRESET_EMAIL_SUBJECT,
-        text: emailText,
-    });
+    if (inProduction) {
+        await axios.post(`${MAILER_HOST}/api/send`, {
+            to: email,
+            subject: PWRESET_EMAIL_SUBJECT,
+            text: emailText,
+        });
+        }
+    else {
+        console.log("Email:");
+        console.log("To: " + email);
+        console.log("Subject: " + PWRESET_EMAIL_SUBJECT);
+        console.log("Text: " + emailText);
+    }
 };
 
 //
