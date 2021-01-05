@@ -28,7 +28,7 @@ services:
       - ../tmp/mock-mailer/npm-cache:/root/.npm:z
       - ../mock-mailer/src:/usr/src/app/src:z
     ports:
-     - "5004:80"
+     - "6001:80"
     environment:
       - PORT=80
       - NODE_ENV=development
