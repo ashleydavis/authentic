@@ -9,9 +9,17 @@ Based on [Node.js](https://nodejs.org/), [Express](https://expressjs.com/) and [
 - New user registration.
 - Password based authentication.
 - Email-based confirmation.
-- Email-based password reset request.
+- Email-based password reset.
 - Authentication issues a [JWT](https://jwt.io/).
 - Validates issued JWTs.
+
+## Prerequisites
+
+To use Authentic you need the following skills:
+
+- Be able to use Docker to instantiate the Authentic image as a container in your production application.
+- Be able to use Docker Compose if you want to run the example application or run the tests.
+- Be able to make HTTP requests using [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) or [Postman](https://www.postman.com/) so you can explore and test Authentic's REST API.
 
 # The example application
 
@@ -41,8 +49,6 @@ docker-compose up --build 2>&1 | tee run.log
 The example application contains an example UI implemented using [React](https://reactjs.org/).
 
 You can find it in the [example/client](https://github.com/ashleydavis/authentic/tree/main/example/client) subdirectory.
-
-TODO: Link to example sub directory. Give instructions on how to use the example UI.
 
 ## Exploring the Authentic REST API
 
@@ -86,22 +92,22 @@ To use in production instantiate the Docker image `authentic` to a container on 
 
 Authentic is configurable through multiple environment variables.
 
-Variable | Required | Default | Descrption
---- | --- | --- | ---
-JWT_SECRET | Yes | None | Sets the secret used for encoding JWTs. 
-JWT_ALGO | | HS256 | Sets the algorithm for signing the JWT. [See allowed algorithms here](https://www.npmjs.com/package/jsonwebtoken#algorithms-supported).
-JWT_VERSION | | 1 | Sets a version number or label that is encoded in the JWT payload. You can change this to any string to invalidate all issued JWTs.
-VERBOSE | | false | Set to "true" to enable verbose logging to standard output.
-NODE_ENV | | unset | Set to "production" when running Authentic in production, otherwise "development" for development or "testing" for testing.
-HOST | | 0.0.0.0 | Sets the host the Authentic microservice is listening on.
-PORT | | 3000 | Sets the port number the microservice is listening on. Usually you'll want to set this to port 80 for production.
-DBHOST | | mongodb://localhost:27017 | Connection string for the Monogdb server required by Authentic.
-DBNAME | | auth | The name of the database where Authentic should keep it's data.
-MAILER_HOST | | http://mailer | Sets the host that handles sending email messages.
-CONF_EMAIL_SUBJECT | | Account confirmation | Sets the subject for the confirmation email.
-CONF_EMAIL_TEMPLATE | | Defaults to contents of template file. | Sets the content for the confirmation email.
-PWRESET_EMAIL_SUBJECT | | Password Reset | Sets the subject for the confirmation email.
-PWRESET_EMAIL_TEMPLATE | | Defaults to contents of template file. | Sets the content for the password reset request email.
+Variable | Default | Descrption
+--- | --- | ---
+JWT_SECRET (required) | None | Sets the secret used for encoding JWTs. 
+JWT_ALGO | HS256 | Sets the algorithm for signing the JWT. [See allowed algorithms here](https://www.npmjs.com/package/jsonwebtoken#algorithms-supported).
+JWT_VERSION | 1 | Sets a version number or label that is encoded in the JWT payload. You can change this to any string to invalidate all issued JWTs.
+VERBOSE | false | Set to "true" to enable verbose logging to standard output.
+NODE_ENV | unset | Set to "production" when running Authentic in production, otherwise "development" for development or "testing" for testing.
+HOST | 0.0.0.0 | Sets the IP address the Authentic microservice is listening on.
+PORT | 3000 | Sets the port number the microservice is listening on. Usually you'll want to set this to port 80 for production.
+DBHOST | mongodb://localhost:27017 | Connection string for the Monogdb server Authentic will use.
+DBNAME | auth | The name of the database where Authentic should keep it's data.
+MAILER_HOST | http://mailer | Sets the host that handles sending email messages.
+CONF_EMAIL_SUBJECT | Account confirmation | Sets the subject for the confirmation email.
+CONF_EMAIL_TEMPLATE | Defaults to contents of template file. | Sets the content for the confirmation email.
+PWRESET_EMAIL_SUBJECT | Password Reset | Sets the subject for the confirmation email.
+PWRESET_EMAIL_TEMPLATE | Defaults to contents of template file. | Sets the content for the password reset request email.
 
 ## Using the Authentic REST API
 
@@ -146,7 +152,7 @@ Registers a new user and sends them a confirmation email.
 
 ```json
 {
-    "ok": true or false,
+    "ok": "true or false",
     "errorMessage": "error message to display to user (when ok is false)"
 }
 ```
@@ -186,7 +192,7 @@ Confirms a new user (triggered through the link in the confirmation email).
 
 ```json
 {
-    "ok": true or false,
+    "ok": "true or false",
     "errorMessage": "error message to display to user (when ok is false)"
 }
 ```
@@ -208,7 +214,7 @@ Authenticates a user and issues a JWT.
 
 ```json
 {
-    "ok": true or false,
+    "ok": "true or false",
     "id": "unique id for the user",
     "token": "JWT issued for the user",
     "errorMessage": "error message to display to user (when ok is false)"
@@ -232,7 +238,7 @@ Validates an issued JWT.
 
 ```json
 {
-    "ok": true or false,
+    "ok": "true or false",
     "id": "unique id for the user, if validated",
 }
 ```
@@ -253,7 +259,7 @@ Refreshes a valid JWT and issues a new JWT.
 
 ```json
 {
-    "ok": true or false,
+    "ok": "true or false",
     "id": "unique id for the user, if validated",
     "token": "new JWT issued for the user, if validated",
 }
@@ -294,7 +300,7 @@ Resets a user's password (triggered from the pw reset validation email).
 
 ```json
 {
-    "ok": true or false,
+    "ok": "true or false",
     "id": "unique id for the user, if validated",
     "token": "new JWT issued for the user, if validated",
 }
@@ -349,9 +355,17 @@ Authentic is designed to be microservice that runs within a private network or p
 
 By itself Authentic has no authentication, it simply provides *authentication services* for a larger application. 
 
-** You still need a gateway microservice that enforces the authentication services provided by Authentic. **
+**You still need a gateway microservice that enforces the authentication services provided by Authentic.**
 
 Please secure your Gateway microservice appropriatley and *never* expose the Authentic microservice to the outside world.
+
+## Configuring email
+
+**You must provide your own email microservice** that can send emails on Authentic's behalf.
+
+By default this is located using DNS at https://mailer. You can set the `MAILER_HOST` environment variable to set the host name for the mailer microservice.
+
+The example application includes a mock mailer microservice that simply prints emails to standard output (which is great for development and testing). **You must replace** this mock microservice with your own that implements email sending. It requires a single REST API for HTTP POST `/api/send` that accepts `to`, `subject`, `text` and (optional) `html` in the request body and then sends the email by whatever service you desire to use.
 
 ## Configuring email templates
 
@@ -369,7 +383,7 @@ EMAIL | The email address for the user that is about to be emailed.
 
 For help debugging set the `VERBOSE` environment variable to `true`.
 
-Also set `NODE_ENV` to `develoment`.
+Also set `NODE_ENV` to `development`.
 
 When debugging (check it out in the example application) the confirmation and password reset emails are simply printed to standard output. That means you can copy the confirmation and password reset links from standard output to test the process of registration and password reset without having to use real emails.
 
@@ -400,7 +414,7 @@ You need a real database to run tests against, use Docker Compose to boot an ins
 docker-compose up
 ```
 
-Then in an other terminal, change to the directory:
+Then in another terminal, change to the directory:
 
 ```bash
 cd authentic/authentic/
@@ -426,3 +440,6 @@ Or run tests in live reload mode:
 npm run test:watch
 ```
 
+# Contact
+
+Please get in touch via [Twitter](https://twitter.com/ashleydavis75) or [Email](mailto:ashley@codecapers.com.au).
