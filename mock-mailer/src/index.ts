@@ -1,6 +1,5 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
-import { sendEmail } from './mailer';
 const morganBody = require('morgan-body');
 
 const isVerbose = process.env.VERBOSE === "true";
@@ -50,12 +49,16 @@ export async function main(): Promise<void> {
         const subject = verifyBodyParam("subject", req);
         const text = verifyBodyParam("text", req);
         const html = req.body.html;
-        sendEmail({
-            to: to,
-            subject: subject,
-            text: text,
-            html: html,
-        });
+
+        console.log("Email:");
+        console.log("To: " + to);
+        console.log("Subject: " + subject);
+        console.log("Text: " + text);
+        console.log("HTML: " + html);
+        
+        //
+        // TODO: Use your desired email service here.
+        //
     });
 
     await startServer();
