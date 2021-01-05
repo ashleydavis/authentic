@@ -32,7 +32,6 @@ services:
     environment:
       - PORT=80
       - NODE_ENV=development
-      - JWT_SECRET=1234
     restart: "no"
 
   authentic:
