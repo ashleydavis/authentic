@@ -27,12 +27,11 @@ jobs:
 
       - name: Run tests
         run: |
-          if [ -f docker-compose.test.yml ]; then
-            docker-compose --file docker-compose.test.yml build
-            docker-compose --file docker-compose.test.yml run sut
-          else
-            docker build . --file Dockerfile
-          fi
+          cd authentic
+          docker-compose up --build -d
+          npm install
+          npm test
+          docker-compose down
 
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
