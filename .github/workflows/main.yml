@@ -31,6 +31,7 @@ jobs:
           docker-compose up --build -d
           npm install
           export DBHOST=mongodb://localhost:6000
+          export MAILER_HOST=http://localhost:6001
           export NODE_ENV=testing
           export JWT_SECRET=1234
           npm test
