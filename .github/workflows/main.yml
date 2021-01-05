@@ -30,6 +30,9 @@ jobs:
           cd authentic
           docker-compose up --build -d
           npm install
+          set DBHOST=mongodb://localhost:6000
+          set NODE_ENV=testing
+          set JWT_SECRET=1234
           npm test
           docker-compose down
 
