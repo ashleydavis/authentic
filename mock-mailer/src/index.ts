@@ -59,6 +59,8 @@ export async function main(): Promise<void> {
         //
         // TODO: Use your desired email service here.
         //
+
+        res.sendStatus(200);
     });
 
     await startServer();
