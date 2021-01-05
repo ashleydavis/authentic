@@ -53,7 +53,7 @@ jobs:
         run: docker build ./authentic --file ./authentic/Dockerfile-prod --tag $IMAGE_NAME
 
       - name: Log into registry
-        run: echo "${{ secrets.DOCKER_PW }}" | docker login -u ${{ github.DOCKER_UN }} --password-stdin
+        run: echo ${{ secrets.DOCKER_PW }} | docker login -u ${{ github.DOCKER_UN }} --password-stdin
 
       - name: Push image
         run: |
