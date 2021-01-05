@@ -1,7 +1,6 @@
 import { IMicroservice, main } from "../";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import * as mongodb from "mongodb";
-import { fdatasync } from "fs";
 
 const baseUrl = "http://localhost:3000";
 
