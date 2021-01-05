@@ -68,7 +68,7 @@ To instantiate the Authentic microservice in production include it in your Docke
 
 ```yaml
   authentic:
-    image: authentic:1.0.0
+    image: docker.pkg.github.com/ashleydavis/authentic/authentic:1.0.0
     container_name: authentic
     ports:
      - "5000:80"
@@ -80,7 +80,6 @@ To instantiate the Authentic microservice in production include it in your Docke
       - JWT_SECRET=1234
     restart: "no"
 ```
-
 
 For a real example see [docker-compose.yaml](https://github.com/ashleydavis/authentic/blob/main/docker-compose.yml) in this repo which starts the example application.
 
