@@ -18,3 +18,19 @@ services:
      - "6000:27017"
     restart: always
 
+  mailer:
+    image: mailer
+    build: 
+      context: ../mock-mailer
+      dockerfile: Dockerfile-dev
+    container_name: mailer
+    volumes:
+      - ../tmp/mock-mailer/npm-cache:/root/.npm:z
+      - ../mock-mailer/src:/usr/src/app/src:z
+    ports:
+     - "5004:80"
+    environment:
+      - PORT=80
+      - NODE_ENV=development
+    restart: "no"
+
