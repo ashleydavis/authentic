@@ -68,7 +68,7 @@ To instantiate the Authentic microservice in production include it in your Docke
 
 ```yaml
   authentic:
-    image: docker.pkg.github.com/ashleydavis/authentic/authentic:1.0.0
+    image: codecapers/authentic:1.0.2
     container_name: authentic
     ports:
      - "5000:80"
@@ -85,7 +85,7 @@ For a real example see [docker-compose.yaml](https://github.com/ashleydavis/auth
 
 ## Usage in production
 
-To use in production instantiate the Docker image `authentic` to a container on your server or in your cluster. Make sure you configure necessary environment variables as described in the next section.
+To use in production instantiate the Docker image `codecapers/authentic:1.0.2` (or later version) to a container on your server or in your cluster. Make sure you configure necessary environment variables as described in the next section.
 
 ## Configuring Authentic
 
