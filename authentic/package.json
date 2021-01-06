@@ -24,6 +24,7 @@
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
+    "axios": "^0.21.1",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
@@ -40,7 +41,6 @@
     "@types/passport-jwt": "^3.0.3",
     "@types/passport-local": "^1.0.33",
     "@types/uuid": "^3.4.4",
-    "axios": "^0.21.1",
     "jest": "^26.6.3",
     "nodemon": "^2.0.6",
     "source-map-support": "^0.5.19",
