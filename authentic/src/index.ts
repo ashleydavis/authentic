@@ -17,7 +17,7 @@ const morganBody = require('morgan-body');
 
 const isVerbose = process.env.VERBOSE === "true";
 const inProduction = process.env.NODE_ENV === "production";
-const inDevelpment = process.env.NODE_ENV === "development"; 
+const inDevelopment = process.env.NODE_ENV === "development"; 
 const inTesting = process.env.NODE_ENV === "testing"; 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
@@ -105,8 +105,8 @@ export async function main(): Promise<IMicroservice> {
 
     app.use(bodyParser.json());
 
-    if (inDevelpment) {
-        verbose("In development, registering morgan.");
+    if (isVerbose || inDevelopment) {
+        verbose("Verbose or development enabled, registering morgan.");
         morganBody(app);
     }
 
