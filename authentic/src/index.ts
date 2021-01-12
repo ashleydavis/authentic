@@ -642,7 +642,9 @@ async function sendSignupConfirmationEmail(email: string, token: string, host: s
     );
 
     if (inProduction) {
-        await axios.post(`${MAILER_HOST}/api/send`, {
+        const sendEmailUrl = `${MAILER_HOST}/api/send`;
+        verbose(`Sending email through HTTP POST request to ${sendEmailUrl}`);
+        await axios.post(sendEmailUrl, {
             to: email,
             subject: CONF_EMAIL_SUBJECT,
             text: emailText,
@@ -684,12 +686,14 @@ async function sendResetPasswordMail(email: string, token: string, host: string)
     );
 
     if (inProduction) {
-        await axios.post(`${MAILER_HOST}/api/send`, {
+        const sendEmailUrl = `${MAILER_HOST}/api/send`;
+        verbose(`Sending email through HTTP POST request to ${sendEmailUrl}`);
+        await axios.post(sendEmailUrl, {
             to: email,
             subject: PWRESET_EMAIL_SUBJECT,
             text: emailText,
         });
-        }
+    }
     else {
         console.log("Email:");
         console.log("To: " + email);
