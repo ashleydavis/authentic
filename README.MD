@@ -183,7 +183,10 @@ Confirms a new user (triggered through the link in the confirmation email).
 ```json
 {
     "email": "email address for the user that is confirming their account",
-    "token": "the confirmation token that was issued to the user by email"
+    "token": "the confirmation token that was issued to the user by email",
+    "data": {
+        /* Optional JSON data to attach to the user. */
+    }
 }
 ```
 

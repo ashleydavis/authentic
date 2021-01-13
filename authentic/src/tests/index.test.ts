@@ -49,12 +49,13 @@ function checkRegisterWhitelist(data: any): void {
 //
 // Registers a new user and returns their confirmation token.
 //
-async function registerNewUser(email: string, password: string) {
+async function registerNewUser(email: string, password: string, data?: any) {
 
     const output = await captureOutput(async () => {
         const registerResponse = await axios.post(`${baseUrl}/api/auth/register`, {
             email: email,
             password: password,
+            data: data,
         });
     
         expect(registerResponse.status).toBe(200);
@@ -451,7 +452,7 @@ describe("authentic", () => {
     // Checks the response from the users or user API.
     //
     function checkUserResponse(data: any) {
-        checkWhitelist(data, [ "_id", "email", "confirmed", "signupDate" ])
+        checkWhitelist(data, [ "_id", "email", "confirmed", "signupDate", "data", ])
     }
 
     it("can get users", async () => {
@@ -516,4 +517,23 @@ describe("authentic", () => {
         const user = userResponse.data;
         expect(user.hash).toBeUndefined();
     });
+
+    it("can register user with data", async () => {
+
+        const userData = {
+            msg: "Hello World!",
+        };
+
+        await registerNewUser(defaultEmail, defaultPw, userData);
+
+        const usersResponse = await axios.get(`${baseUrl}/api/users`);
+        expect(usersResponse.data.length).toBe(1);
+        expect(usersResponse.data[0].data).toEqual(userData);
+
+        const userId = usersResponse.data[0]._id;
+
+        const userResponse = await axios.get(`${baseUrl}/api/user?id=${userId}`);
+        expect(userResponse.data.data).toEqual(userData);
+    });
+
 });

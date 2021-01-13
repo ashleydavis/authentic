@@ -232,6 +232,7 @@ export async function main(): Promise<IMicroservice> {
     {
         "email": "someone@something.com",
         "password": "fooey"
+        "data": <optional data to attach to the user>
     }
     */
     post(app, "/api/auth/register", async (req, res) => {
@@ -266,6 +267,7 @@ export async function main(): Promise<IMicroservice> {
             confirmationTokenExpires: Date.now() + confirmAccountTimeoutMillis,
             confirmed: false,
             signupDate: new Date(),
+            data: req.body.data,
         });
 
         await sendSignupConfirmationEmail(email, confirmationToken, req.headers.host!);
@@ -551,7 +553,7 @@ export async function main(): Promise<IMicroservice> {
         res.sendStatus(200);
     });    
 
-    const userFieldsWhitelist = { _id: 1, email: 1, confirmed: 1, signupDate: 1 };
+    const userFieldsWhitelist = { _id: 1, email: 1, confirmed: 1, signupDate: 1, data: 1, };
 
     //
     // Gets a particular user.
