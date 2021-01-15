@@ -380,20 +380,28 @@ export async function main(): Promise<IMicroservice> {
     post(app, "/api/auth/validate", async (req, res) => {
 
         const token = verifyBodyParam("token", req);
-        const tokenPayload = jwt.verify(token, JWT_SECRET, { algorithms: [ JWT_ALGO ] }) as IJwtPayload;
 
-        const user = await validateJwtPayload(tokenPayload);
-        if (!user) {
+        try {
+            const tokenPayload = jwt.verify(token, JWT_SECRET, { algorithms: [ JWT_ALGO ] }) as IJwtPayload;
+    
+            const user = await validateJwtPayload(tokenPayload);
+            if (!user) {
+                // Not valid.
+                res.json({ ok: false });
+                return;
+            }
+            
+            // Validated.
+            res.json({ 
+                ok: true, 
+                id: tokenPayload.sub,
+            });
+        }
+        catch (err) {
             // Not valid.
             res.json({ ok: false });
             return;
         }
-
-        // Validated.
-        res.json({ 
-            ok: true, 
-            id: tokenPayload.sub,
-        });
     });
 
     /*

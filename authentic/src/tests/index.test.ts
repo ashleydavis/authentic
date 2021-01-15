@@ -347,15 +347,11 @@ describe("authentic", () => {
 
     it("invalid token doesn't validate", async () => {
 
-        checkException(
-            () => axios.post(`${baseUrl}/api/auth/validate`, {
-                "token": "1234",
-            }),
-            err => {
-                expect(err.response.status).toBe(500);
-                expect(err.response.data).toBe("Internal Server Error");
-            }
-        )
+        const response = await axios.post(`${baseUrl}/api/auth/validate`, {
+            "token": "1234",
+        });
+
+        expect(response.data.ok).toBe(false);
     });
 
     it('can refresh token', async () => {
