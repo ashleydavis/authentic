@@ -13,7 +13,7 @@ import * as jwt from "jsonwebtoken";
 import * as moment from "moment";
 import { Server } from 'http';
 import axios from 'axios';
-import { randomInRange } from "make-random";
+const { randomInRange } = require("make-random");
 const morganBody = require('morgan-body');
 
 const isVerbose = process.env.VERBOSE === "true";
