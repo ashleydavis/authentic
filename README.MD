@@ -107,6 +107,7 @@ CONF_EMAIL_SUBJECT | Account confirmation | Sets the subject for the confirmatio
 CONF_EMAIL_TEMPLATE | Defaults to contents of template file. | Sets the content for the confirmation email.
 PWRESET_EMAIL_SUBJECT | Password Reset | Sets the subject for the confirmation email.
 PWRESET_EMAIL_TEMPLATE | Defaults to contents of template file. | Sets the content for the password reset request email.
+PW_RESET_TOKEN_TYPE | uuid | Sets the type of token to use for password reset requests. Can be one of "uuid" or "random".
 
 ## Using the Authentic REST API
 

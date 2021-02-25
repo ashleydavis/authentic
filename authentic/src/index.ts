@@ -13,6 +13,7 @@ import * as jwt from "jsonwebtoken";
 import * as moment from "moment";
 import { Server } from 'http';
 import axios from 'axios';
+import { randomInRange } from "make-random";
 const morganBody = require('morgan-body');
 
 const isVerbose = process.env.VERBOSE === "true";
@@ -28,6 +29,7 @@ const CONF_EMAIL_TEMPLATE = process.env.CONF_EMAIL_TEMPLATE;
 const PWRESET_EMAIL_SUBJECT = process.env.PWRESET_EMAIL_SUBJECT || "Password Reset";
 const PWRESET_EMAIL_TEMPLATE = process.env.PWRESET_EMAIL_TEMPLATE;
 const MAILER_HOST = process.env.MAILER_HOST || "http://mailer";
+const PW_RESET_TOKEN_TYPE = process.env.PW_RESET_TOKEN_TYPE || "uuid";
 
 function verbose(msg: string): void {
     if (isVerbose) {
@@ -462,7 +464,17 @@ export async function main(): Promise<IMicroservice> {
         const passwordResetTimeoutMinutes = 60;
         const passwordResetTimeoutMillis = passwordResetTimeoutMinutes * 60 * 1000; 
 
-        const token = uuid.v4();
+        let token: string;
+        if (PW_RESET_TOKEN_TYPE === "uuid") {
+            token = uuid.v4();
+        }
+        else if (PW_RESET_TOKEN_TYPE === "random") {
+            token = await randomInRange(100000, 999999).toString();            
+        }
+        else {
+            throw new Error(`Invalid value for  PW_RESET_TOKEN_TYPE, expected "uuid" or "random", got ${PW_RESET_TOKEN_TYPE}.`);
+        }        
+
         await usersCollection.updateOne({
                 _id: user._id,
             },
