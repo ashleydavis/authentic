@@ -469,7 +469,7 @@ export async function main(): Promise<IMicroservice> {
             token = uuid.v4();
         }
         else if (PW_RESET_TOKEN_TYPE === "random") {
-            token = await randomInRange(100000, 999999).toString();            
+            token = (await randomInRange(100000, 999999)).toString();            
         }
         else {
             throw new Error(`Invalid value for  PW_RESET_TOKEN_TYPE, expected "uuid" or "random", got ${PW_RESET_TOKEN_TYPE}.`);
