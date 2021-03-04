@@ -222,7 +222,7 @@ describe("authentic", () => {
         expect(user.hash).not.toEqual(defaultPw);
     });
 
-    it("can't register user more than once", async () => {
+    it("can't register an unconfirmed user more than once", async () => {
         await registerNewUser(defaultEmail, defaultPw);
 
         const duplicateRegisterResponse = await axios.post(`${baseUrl}/api/auth/register`, {
@@ -231,7 +231,7 @@ describe("authentic", () => {
         });
 
         expect(duplicateRegisterResponse.status).toBe(200);
-        expect(duplicateRegisterResponse.data.ok).toBe(false);
+        expect(duplicateRegisterResponse.data.ok).toBe(true);
         checkRegisterWhitelist(duplicateRegisterResponse.data);
     });
 
@@ -257,6 +257,21 @@ describe("authentic", () => {
         const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
         await confirmNewUser(defaultEmail, confirmationToken);
     });
+
+    it("can't register a confirmed user more than once", async () => {
+
+        const confirmationToken = await registerNewUser(defaultEmail, defaultPw);
+        await confirmNewUser(defaultEmail, confirmationToken);
+
+        const duplicateRegisterResponse = await axios.post(`${baseUrl}/api/auth/register`, {
+                email: defaultEmail,
+                password: defaultPw,
+        });
+
+        expect(duplicateRegisterResponse.status).toBe(200);
+        expect(duplicateRegisterResponse.data.ok).toBe(false);
+        checkRegisterWhitelist(duplicateRegisterResponse.data);
+    });    
 
     //
     // Check the response from /authenticate against the whitelist.

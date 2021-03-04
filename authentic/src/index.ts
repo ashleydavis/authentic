@@ -290,11 +290,17 @@ export async function main(): Promise<IMicroservice> {
         //
         const existingUser = await usersCollection.findOne({ email: email });
         if (existingUser) {
-            res.json({
-                ok: false,
-                errorMessage: "This email address has already been registered.",
-            });
-            return;
+            if (existingUser.confirmed) {
+                // They already confirmed.
+                res.json({
+                    ok: false,
+                    errorMessage: "This email address has already been registered.",
+                });
+                return;
+            }
+
+            // Delete the existing user that is unconfirmed so they can register again.
+            await usersCollection.deleteOne({ _id: existingUser._id });
         }
 
         const confirmAccountTimeoutMinutes = 60;
