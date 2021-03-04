@@ -100,6 +100,45 @@ export interface IMicroservice {
     db: mongodb.Db;
 }
 
+//
+// Creates a capped collection. This is like a circular buffer in the database.
+//
+export async function createCappedCollection(collectionName: string, size: number, firstDoc: any, db: mongodb.Db): Promise<void> {
+    let collection = db.collection(collectionName);
+    const count = await collection.find().count();
+    if (count === 0) {
+        //
+        // Collection not created yet.
+        //
+        collection = await db.createCollection(collectionName, { capped: true, size: size });
+
+        //
+        // Insert first document so we don't try to create it again.
+        //
+        await collection.insertOne(firstDoc);
+    }
+}
+
+//
+// Used for recording system events.
+//
+interface IEvent {
+    //
+    // The name of the event.
+    //
+    event: string;
+
+    //
+    // The date the event ocurred.
+    //
+    date: Date;
+
+    //
+    // Data attached to the event.
+    //
+    data: any;
+}
+
 export async function main(): Promise<IMicroservice> {
 
     const client = await mongodb.MongoClient.connect(DBHOST, { useUnifiedTopology: true });
@@ -115,6 +154,8 @@ export async function main(): Promise<IMicroservice> {
     app.use(passport.initialize());
 
     const usersCollection = db.collection("users");
+    await createCappedCollection("events", 1000000, { event: "first", date: new Date(), data: {} }, db);
+    const events = db.collection<IEvent>("events"); 
 
     //
     // Validate a JWT payload and returns the user it represents.
@@ -262,7 +303,7 @@ export async function main(): Promise<IMicroservice> {
         const hash = bcrypt.hashSync(password);
         const confirmationToken = uuid.v4();
         
-        await usersCollection.insertOne({
+        const result = await usersCollection.insertOne({
             email: email,
             hash: hash,
             confirmationToken: confirmationToken,
@@ -272,7 +313,9 @@ export async function main(): Promise<IMicroservice> {
             data: req.body.data,
         });
 
-        await sendSignupConfirmationEmail(email, confirmationToken, req.headers.host!);
+        await events.insertOne({ event: "registered", date: new Date(), data: { userId: result.insertedId, email: email } });
+
+        await sendSignupConfirmationEmail(email, confirmationToken, req.headers.host!, events);
 
         res.json({
             ok: true,
@@ -301,7 +344,7 @@ export async function main(): Promise<IMicroservice> {
 
         //TODO: if no user send error.
 
-        await sendSignupConfirmationEmail(email, user.confirmationToken, req.headers.host!);
+        await sendSignupConfirmationEmail(email, user.confirmationToken, req.headers.host!, events);
 
         res.sendStatus(200);
     });
@@ -350,6 +393,8 @@ export async function main(): Promise<IMicroservice> {
             }
         );
 
+        await events.insertOne({ event: "confirmed", date: new Date(), data: { userId: user._id, email: email } });
+
         res.json({ ok: true });
     });
 
@@ -362,7 +407,7 @@ export async function main(): Promise<IMicroservice> {
     }
     */
     post(app, "/api/auth/authenticate", async (req, res) => {
-        await authenticateLocal(req, res);
+        await authenticateLocal(req, res, events);
     });
 
     /*
@@ -392,6 +437,8 @@ export async function main(): Promise<IMicroservice> {
                 res.json({ ok: false });
                 return;
             }
+
+            await events.insertOne({ event: "token-validated", date: new Date(), data: { userId: user._id } });
             
             // Validated.
             res.json({ 
@@ -430,6 +477,8 @@ export async function main(): Promise<IMicroservice> {
             res.json({ ok: false });
             return;
         }
+
+        await events.insertOne({ event: "token-refreshed", date: new Date(), data: { userId: user._id } });
 
         const newToken = issueToken(user);
 
@@ -487,7 +536,9 @@ export async function main(): Promise<IMicroservice> {
             }
         );
 
-        await sendResetPasswordMail(user.email, token, req.headers.host!);
+        await events.insertOne({ event: "pw-reset-requested", date: new Date(), data: { email: email } });
+
+        await sendResetPasswordMail(user.email, token, req.headers.host!, events);
 
         res.sendStatus(200);
     });
@@ -541,6 +592,8 @@ export async function main(): Promise<IMicroservice> {
             }
         );
 
+        await events.insertOne({ event: "pw-reset", date: new Date(), data: { userId: user._id } });
+
         res.json({
             ok: true,
         });
@@ -561,14 +614,17 @@ export async function main(): Promise<IMicroservice> {
 
         const hash = bcrypt.hashSync(password);
 
+        const userId = new mongodb.ObjectID(tokenPayload.sub);
         await usersCollection.updateOne(
-            { _id: new mongodb.ObjectID(tokenPayload.sub) },
+            { _id: userId },
             {
                 $set: {
                     hash:  hash,
                     passwordLastUpdated: new Date(),
                 }
             });
+
+        await events.insertOne({ event: "pw-updated", date: new Date(), data: { userId: userId } });            
             
         res.sendStatus(200);
     });    
@@ -639,7 +695,7 @@ function validatePassword(user: any, password: string): Promise<boolean> {
 //
 // Send an email to the user asking them to confirm their account.
 //
-async function sendSignupConfirmationEmail(email: string, token: string, host: string): Promise<void> {
+async function sendSignupConfirmationEmail(email: string, token: string, host: string, events: mongodb.Collection<IEvent>): Promise<void> {
 
     verbose("Sending confirmation email to " + email);
 
@@ -671,6 +727,8 @@ async function sendSignupConfirmationEmail(email: string, token: string, host: s
             subject: CONF_EMAIL_SUBJECT,
             text: emailText,
         });
+
+        await events.insertOne({ event: "sent-conf-email", date: new Date(), data: { email: email } });
     }
     else {
         console.log("Email:");
@@ -685,7 +743,7 @@ async function sendSignupConfirmationEmail(email: string, token: string, host: s
 //
 // Send an email to the user with a link to reset their password.
 //
-async function sendResetPasswordMail(email: string, token: string, host: string) {
+async function sendResetPasswordMail(email: string, token: string, host: string, events: mongodb.Collection<IEvent>) {
 
     let emailTemplate: string;
 
@@ -715,6 +773,8 @@ async function sendResetPasswordMail(email: string, token: string, host: string)
             subject: PWRESET_EMAIL_SUBJECT,
             text: emailText,
         });
+
+        await events.insertOne({ event: "set-pw-reset-email", date: new Date(), data: { email: email } });
     }
     else {
         console.log("Email:");
@@ -727,7 +787,7 @@ async function sendResetPasswordMail(email: string, token: string, host: string)
 //
 // Authenticate a user.
 //
-function authenticateLocal(req: Express.Request, res: express.Response): void {
+function authenticateLocal(req: Express.Request, res: express.Response, events: mongodb.Collection<IEvent>): void {
     const authenticator = passport.authenticate('local', function (err, user, info) {
         if (err) {
             res.sendStatus(500);
@@ -759,8 +819,13 @@ function authenticateLocal(req: Express.Request, res: express.Response): void {
                     // https://www.npmjs.com/package/jsonwebtoken
                     // 
         
-                    const token = issueToken(user);
-        
+                    events.insertOne({ event: "authenticated", date: new Date(), data: { userId: user._id } })
+                        .catch(err => {
+                            console.error("Failed to log 'authenticated' event to database.");
+                            console.error(err && err.stack || err);
+                        });
+                    
+                    const token = issueToken(user);       
                     res.json({
                         ok: true,
                         token: token,
