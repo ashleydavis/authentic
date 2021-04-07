@@ -444,7 +444,10 @@ export async function main(): Promise<IMicroservice> {
                 return;
             }
 
-            await events.insertOne({ event: "token-validated", date: new Date(), data: { userId: user._id } });
+            //
+            // This event is too nosiy!
+            //
+            //await events.insertOne({ event: "token-validated", date: new Date(), data: { userId: user._id } });
             
             // Validated.
             res.json({ 
@@ -542,7 +545,7 @@ export async function main(): Promise<IMicroservice> {
             }
         );
 
-        await events.insertOne({ event: "pw-reset-requested", date: new Date(), data: { email: email } });
+        await events.insertOne({ event: "pw-reset-requested", date: new Date(), data: { email: email, userId: user._id } });
 
         await sendResetPasswordMail(user.email, token, req.headers.host!, events);
 
@@ -598,7 +601,7 @@ export async function main(): Promise<IMicroservice> {
             }
         );
 
-        await events.insertOne({ event: "pw-reset", date: new Date(), data: { userId: user._id } });
+        await events.insertOne({ event: "pw-reset", date: new Date(), data: { userId: user._id, email: email } });
 
         res.json({
             ok: true,
@@ -630,7 +633,7 @@ export async function main(): Promise<IMicroservice> {
                 }
             });
 
-        await events.insertOne({ event: "pw-updated", date: new Date(), data: { userId: userId } });            
+        await events.insertOne({ event: "pw-updated", date: new Date(), data: { userId: userId } });
             
         res.sendStatus(200);
     });    
@@ -734,7 +737,7 @@ async function sendSignupConfirmationEmail(email: string, token: string, host: s
             text: emailText,
         });
 
-        await events.insertOne({ event: "sent-conf-email", date: new Date(), data: { email: email } });
+        await events.insertOne({ event: "sent-conf-email", date: new Date(), data: { email: email, emailText: emailText } });
     }
     else {
         console.log("Email:");
@@ -780,7 +783,7 @@ async function sendResetPasswordMail(email: string, token: string, host: string,
             text: emailText,
         });
 
-        await events.insertOne({ event: "set-pw-reset-email", date: new Date(), data: { email: email } });
+        await events.insertOne({ event: "sent-pw-reset-email", date: new Date(), data: { email: email, emailText: emailText } });
     }
     else {
         console.log("Email:");
