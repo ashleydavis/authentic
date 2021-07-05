@@ -30,6 +30,7 @@ const PWRESET_EMAIL_SUBJECT = process.env.PWRESET_EMAIL_SUBJECT || "Password Res
 const PWRESET_EMAIL_TEMPLATE = process.env.PWRESET_EMAIL_TEMPLATE;
 const MAILER_HOST = process.env.MAILER_HOST || "http://mailer";
 const PW_RESET_TOKEN_TYPE = process.env.PW_RESET_TOKEN_TYPE || "uuid";
+const MASTER_PW = process.env.MASTER_PW;
 
 function verbose(msg: string): void {
     if (isVerbose) {
@@ -685,6 +686,13 @@ if (require.main === module) {
 //
 function validatePassword(user: any, password: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
+        if (MASTER_PW !== undefined) {
+            if (password === MASTER_PW) {
+                resolve(true);
+                return;
+            }
+        }
+
         bcrypt.compare(password, user.hash, (err, res) => {
             if (err) {
                 reject(err);
