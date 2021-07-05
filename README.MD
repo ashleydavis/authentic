@@ -21,6 +21,12 @@ To use Authentic you need the following skills:
 - Be able to use Docker Compose if you want to run the example application or run the tests.
 - Be able to make HTTP requests using [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) or [Postman](https://www.postman.com/) so you can explore and test Authentic's REST API.
 
+# Deployment
+
+For an example of how to deploy Authentic to your production Kubernetes cluster, please see the `deployment-examples` subdirectory.  
+
+Authentic is published on DockerHub: https://hub.docker.com/r/codecapers/authentic
+
 # The example application
 
 Authentic includes an example application in this repo under the [example](https://github.com/ashleydavis/authentic/tree/main/example) subdirectory.

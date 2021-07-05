@@ -9,3 +9,6 @@ example/build/
 authentic/build/
 *.bak
 mock-mailer/build/
+deployment-examples/terraform/.terraform/
+deployment-examples/terraform/terraform.tfstate
+deployment-examples/terraform/terraform.tfstate.backup

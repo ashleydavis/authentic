@@ -1,0 +1,50 @@
+#
+# A yaml file for deploying Authentic to Kubernetes using Kubectl.
+#
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentic
+  labels:
+    pod: authentic
+spec:
+  replicas: 1
+  selector:
+    matchLabels: 
+      pod: authentic
+  template:
+    metadata:
+      labels:
+        pod: authentic
+    spec:
+      containers:
+        - name: authentic
+          image: codecapers/authentic:1.0.9
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: DBHOST
+              value: "mongodb://localhost:27017"
+            - name: DBNAME
+              value: "auth"
+            - name: JWT_SECRET
+              value: "1234"
+            - name: JWT_VERSION
+              value: "1"
+            - name: MAILER_HOST
+              value: "http://mailer"
+            - name: VERBOSE
+              value: "true"
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentic
+spec:
+  selector:
+    pod: authentic
+  ports:
+    - port: 80
