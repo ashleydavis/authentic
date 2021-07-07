@@ -43,7 +43,7 @@ function checkWhitelist(data: any, allowedFields: string[]): void {
 // Check the register function matches the whilte list.
 //
 function checkRegisterWhitelist(data: any): void {
-    checkWhitelist(data, [ "ok", "errorMessage" ]);
+    checkWhitelist(data, [ "ok", "errorMessage", "id" ]);
 }
 
 //
@@ -61,7 +61,6 @@ async function registerNewUser(email: string, password: string, data?: any) {
         expect(registerResponse.status).toBe(200);
         checkRegisterWhitelist(registerResponse.data);
     });
-
 
     return extractConfirmationToken(output);
 }
@@ -85,7 +84,7 @@ async function confirmNewUser(email: string, confirmationToken: string) {
     });
 
     expect(confirmResponse.status).toBe(200);
-    checkWhitelist(confirmResponse.data, [ "ok", "errorMessage" ]);
+    checkWhitelist(confirmResponse.data, [ "ok", "errorMessage", "id" ]);
 }
 
 //

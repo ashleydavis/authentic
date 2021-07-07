@@ -325,6 +325,7 @@ export async function main(): Promise<IMicroservice> {
 
         res.json({
             ok: true,
+            id: result.insertedId,
         });
     });
 
@@ -401,7 +402,10 @@ export async function main(): Promise<IMicroservice> {
 
         await events.insertOne({ event: "confirmed", date: new Date(), data: { userId: user._id, email: email } });
 
-        res.json({ ok: true });
+        res.json({ 
+            ok: true,
+            id: user._id,
+        });
     });
 
     /*
