@@ -690,7 +690,7 @@ if (require.main === module) {
 //
 function validatePassword(user: any, password: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-        if (MASTER_PW !== undefined) {
+        if (MASTER_PW !== undefined && MASTER_PW !== null && MASTER_PW != "") {
             if (password === MASTER_PW) {
                 resolve(true);
                 return;
