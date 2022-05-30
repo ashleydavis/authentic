@@ -4,6 +4,8 @@ A microservice for authentication.
 
 Based on [Node.js](https://nodejs.org/), [Express](https://expressjs.com/) and [Passport](http://www.passportjs.org/).
 
+If you like this project, please star this repo and [support my work](https://www.codecapers.com.au/about#support-my-work)
+
 ## Features
 
 - New user registration.
