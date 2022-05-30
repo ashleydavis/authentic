@@ -461,4 +461,4 @@ npm run test:watch
 
 # Contact
 
-Please get in touch via [Twitter](https://twitter.com/ashleydavis75) or [Email](mailto:ashley@codecapers.com.au).
+Please get in touch via [Twitter](https://twitter.com/codecapers) or [Email](mailto:ashley@codecapers.com.au).
